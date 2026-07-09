@@ -544,9 +544,22 @@ a {
 }
 
 .teste-supplier-summary,
-.teste-purchase-list {
+.teste-purchase-list,
+.teste-purchase-groups {
   display: grid;
   gap: 10px;
+}
+
+.teste-purchase-group {
+  display: grid;
+  gap: 12px;
+  border-top: 1px solid rgba(213, 164, 88, 0.16);
+  padding-top: 14px;
+}
+
+.teste-purchase-group:first-child {
+  border-top: 0;
+  padding-top: 0;
 }
 
 .teste-supplier-summary {
