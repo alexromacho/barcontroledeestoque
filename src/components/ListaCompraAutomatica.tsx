@@ -4,7 +4,7 @@ import { Fornecedor, ItemCompra } from "../types/estoque";
 type ListaCompraAutomaticaProps = {
   fornecedores: Fornecedor[];
   itensCompraPorFornecedor: Record<string, ItemCompra[]>;
-  onEnviarPedido: (fornecedor: Fornecedor) => void;
+  onEnviarPedido: (fornecedor: Fornecedor, itensCompra: ItemCompra[]) => void;
 };
 
 export function ListaCompraAutomatica({
@@ -51,9 +51,9 @@ export function ListaCompraAutomatica({
                 )}
               </div>
 
-              <button type="button" onClick={() => onEnviarPedido(fornecedor)}>
+              <button type="button" onClick={() => onEnviarPedido(fornecedor, itensCompra)}>
                 <Send size={18} />
-                Enviar pedido
+                Enviar pedido no WhatsApp
               </button>
             </section>
           );

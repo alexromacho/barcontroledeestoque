@@ -9,6 +9,15 @@ import { fornecedores, produtosEstoque } from "./data/produtosJoaoVero";
 import { Fornecedor, ItemCompra, ProdutoEstoque, SaidaEstoque } from "./types/estoque";
 import "./styles.css";
 
+function normalizarTexto(texto: string) {
+  return texto
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim()
+    .replace(/\s+/g, " ");
+}
+
 function DashboardTeste() {
   const [produtos, setProdutos] = useState<ProdutoEstoque[]>(produtosEstoque);
   const [termoBusca, setTermoBusca] = useState("");
@@ -18,13 +27,13 @@ function DashboardTeste() {
   const [message, setMessage] = useState("");
 
   const produtosFiltrados = useMemo(() => {
-    const busca = termoBusca.trim().toLowerCase();
+    const busca = normalizarTexto(termoBusca);
     if (!busca) return produtos;
 
     return produtos.filter((produto) =>
-      produto.name.toLowerCase().includes(busca) ||
-      produto.category.toLowerCase().includes(busca) ||
-      produto.supplier.toLowerCase().includes(busca),
+      normalizarTexto(produto.name).includes(busca) ||
+      normalizarTexto(produto.category).includes(busca) ||
+      normalizarTexto(produto.supplier).includes(busca),
     );
   }, [produtos, termoBusca]);
 
@@ -97,8 +106,16 @@ function DashboardTeste() {
     );
   }
 
-  function sendPurchaseOrder(fornecedor: Fornecedor) {
+  function sendPurchaseOrder(fornecedor: Fornecedor, itensDoFornecedor: ItemCompra[]) {
+    const linhasPedido = itensDoFornecedor.length > 0
+      ? itensDoFornecedor.map((item) => `- ${item.name}: comprar ${item.quantityToBuy} ${item.unit}`).join("\n")
+      : "- Nenhum item abaixo do mínimo no momento.";
+    const mensagem = encodeURIComponent(
+      `Olá, ${fornecedor.name}! Pedido sugerido do Bar do Português:\n\n${linhasPedido}`,
+    );
+
     setMessage(`Pedido enviado para ${fornecedor.name}`);
+    window.location.href = `https://wa.me/${fornecedor.phone}?text=${mensagem}`;
   }
 
   return (

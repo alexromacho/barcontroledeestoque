@@ -2,14 +2,28 @@ import { Fornecedor, ProdutoEstoque } from "../types/estoque";
 
 export const fornecedorJoaoVero: Fornecedor = {
   name: "João Vero Importa",
-  phone: "",
-  category: "Destilados, Vinhos, Energéticos e Licores",
-  purchaseFrequency: "Semanal",
+  phone: "5514996511343",
+  category: "Bebidas / Destilados / Vinhos",
+  purchaseFrequency: "semanal",
+};
+
+export const fornecedorCaioAragua: Fornecedor = {
+  name: "Caio Aragua",
+  phone: "5514981012021",
+  category: "Água",
+  purchaseFrequency: "Sob demanda",
+};
+
+export const fornecedorWrEmbalagens: Fornecedor = {
+  name: "WR Embalagens",
+  phone: "5514981330675",
+  category: "Embalagens / Limpeza / Descartáveis",
+  purchaseFrequency: "Sob demanda",
 };
 
 export const fornecedorMariBlumax: Fornecedor = {
   name: "Mari Blumax",
-  phone: "14 3366-6410",
+  phone: "551433666410",
   category: "Limpeza / Higiene",
   purchaseFrequency: "Sob demanda",
 };
@@ -79,6 +93,48 @@ export const produtosMariBlumax: ProdutoEstoque[] = [
   { id: "rolo-papel-maos", name: "Rolo de papel para mãos", category: fornecedorMariBlumax.category, supplier: fornecedorMariBlumax.name, unit: "rolo/fardo", currentStock: 4, minimumStock: 4 },
 ];
 
-export const fornecedores = [fornecedorJoaoVero, fornecedorMariBlumax];
+export const produtosCaioAragua: ProdutoEstoque[] = [
+  { id: "agua-sem-gas", name: "Água sem gás", category: fornecedorCaioAragua.category, supplier: fornecedorCaioAragua.name, unit: "fardo", currentStock: 15, minimumStock: 15 },
+  { id: "agua-com-gas", name: "Água com gás", category: fornecedorCaioAragua.category, supplier: fornecedorCaioAragua.name, unit: "fardo", currentStock: 6, minimumStock: 6 },
+];
 
-export const produtosEstoque = [...produtosJoaoVero, ...produtosMariBlumax];
+export const produtosWrEmbalagens: ProdutoEstoque[] = [
+  { id: "copo-50-ml", name: "Copo 50 ml", category: fornecedorWrEmbalagens.category, supplier: fornecedorWrEmbalagens.name, unit: "pacote", currentStock: 2, minimumStock: 2 },
+  { id: "copo-500-ml", name: "Copo 500 ml", category: fornecedorWrEmbalagens.category, supplier: fornecedorWrEmbalagens.name, unit: "pacote", currentStock: 4, minimumStock: 4 },
+  { id: "copo-700-ml", name: "Copo 700 ml", category: fornecedorWrEmbalagens.category, supplier: fornecedorWrEmbalagens.name, unit: "pacote", currentStock: 4, minimumStock: 4 },
+  { id: "papel-interfolha", name: "Papel interfolha", category: fornecedorWrEmbalagens.category, supplier: fornecedorWrEmbalagens.name, unit: "pacote", currentStock: 3, minimumStock: 3 },
+  { id: "papel-toalha-cozinha", name: "Papel toalha cozinha", category: fornecedorWrEmbalagens.category, supplier: fornecedorWrEmbalagens.name, unit: "rolo", currentStock: 15, minimumStock: 15 },
+  { id: "papel-tv", name: "Papel TV", category: fornecedorWrEmbalagens.category, supplier: fornecedorWrEmbalagens.name, unit: "unidade", currentStock: 10, minimumStock: 10 },
+  { id: "caixa-bandeja-500g-aluminio", name: "Caixa de bandeja 500 g de alumínio", category: fornecedorWrEmbalagens.category, supplier: fornecedorWrEmbalagens.name, unit: "caixa", currentStock: 1, minimumStock: 1 },
+  { id: "caixa-bandeja-1kg-aluminio", name: "Caixa de bandeja 1 kg de alumínio", category: fornecedorWrEmbalagens.category, supplier: fornecedorWrEmbalagens.name, unit: "caixa", currentStock: 1, minimumStock: 1 },
+  { id: "papel-comanda-sem-pauta", name: "Papel comanda sem pauta", category: fornecedorWrEmbalagens.category, supplier: fornecedorWrEmbalagens.name, unit: "rolo", currentStock: 3, minimumStock: 3 },
+  { id: "saco-talher-6x24", name: "Saco de talher 6x24", category: fornecedorWrEmbalagens.category, supplier: fornecedorWrEmbalagens.name, unit: "pacote", currentStock: 2, minimumStock: 2 },
+  { id: "caixa-palito-solto", name: "Caixa de palito solto", category: fornecedorWrEmbalagens.category, supplier: fornecedorWrEmbalagens.name, unit: "caixa", currentStock: 2, minimumStock: 2 },
+  { id: "caixa-maionese", name: "Caixa de maionese", category: fornecedorWrEmbalagens.category, supplier: fornecedorWrEmbalagens.name, unit: "caixa", currentStock: 4, minimumStock: 4 },
+  { id: "caixa-ketchup", name: "Caixa de ketchup", category: fornecedorWrEmbalagens.category, supplier: fornecedorWrEmbalagens.name, unit: "caixa", currentStock: 4, minimumStock: 4 },
+  { id: "prato-bolo", name: "Prato de bolo", category: fornecedorWrEmbalagens.category, supplier: fornecedorWrEmbalagens.name, unit: "pacote", currentStock: 10, minimumStock: 10 },
+  { id: "colher-branca-cha", name: "Colher branca de chá", category: fornecedorWrEmbalagens.category, supplier: fornecedorWrEmbalagens.name, unit: "pacote", currentStock: 2, minimumStock: 2 },
+  { id: "garfo-para-bolo", name: "Garfo para bolo", category: fornecedorWrEmbalagens.category, supplier: fornecedorWrEmbalagens.name, unit: "pacote", currentStock: 3, minimumStock: 3 },
+  { id: "canudo-dobravel-preto-flexivel", name: "Canudo dobrável preto flexível", category: fornecedorWrEmbalagens.category, supplier: fornecedorWrEmbalagens.name, unit: "pacote", currentStock: 3, minimumStock: 3 },
+  { id: "canudo-milkshake", name: "Canudo para milkshake", category: fornecedorWrEmbalagens.category, supplier: fornecedorWrEmbalagens.name, unit: "pacote", currentStock: 2, minimumStock: 2 },
+  { id: "borrifador", name: "Borrifador", category: fornecedorWrEmbalagens.category, supplier: fornecedorWrEmbalagens.name, unit: "unidade", currentStock: 2, minimumStock: 2 },
+  { id: "caixa-agua-sanitaria", name: "Caixa de água sanitária", category: fornecedorWrEmbalagens.category, supplier: fornecedorWrEmbalagens.name, unit: "caixa", currentStock: 2, minimumStock: 2 },
+  { id: "desinfetante-algas", name: "Desinfetante de algas", category: fornecedorWrEmbalagens.category, supplier: fornecedorWrEmbalagens.name, unit: "unidade", currentStock: 2, minimumStock: 2 },
+  { id: "luva-latex-m", name: "Luva látex M", category: fornecedorWrEmbalagens.category, supplier: fornecedorWrEmbalagens.name, unit: "pacote", currentStock: 2, minimumStock: 2 },
+  { id: "vassoura", name: "Vassoura", category: fornecedorWrEmbalagens.category, supplier: fornecedorWrEmbalagens.name, unit: "unidade", currentStock: 2, minimumStock: 2 },
+  { id: "rodo-fibra-com-cabo", name: "Rodo para fibra com cabo", category: fornecedorWrEmbalagens.category, supplier: fornecedorWrEmbalagens.name, unit: "unidade", currentStock: 2, minimumStock: 2 },
+];
+
+export const fornecedores = [
+  fornecedorJoaoVero,
+  fornecedorCaioAragua,
+  fornecedorWrEmbalagens,
+  fornecedorMariBlumax,
+];
+
+export const produtosEstoque = [
+  ...produtosJoaoVero,
+  ...produtosCaioAragua,
+  ...produtosWrEmbalagens,
+  ...produtosMariBlumax,
+];
