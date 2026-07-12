@@ -3,8 +3,8 @@ import { Fornecedor, ProdutoEstoque } from "../types/estoque";
 export const fornecedorJoaoVero: Fornecedor = {
   name: "João Vero Imports",
   phone: "5514996511343",
-  category: "Bebidas / Destilados / Vinhos",
-  purchaseFrequency: "semanal",
+  category: "Bebidas alcoólicas, vinhos, energéticos e licores",
+  purchaseFrequency: "Semanal",
 };
 
 export const fornecedorCaioAragua: Fornecedor = {
@@ -17,15 +17,22 @@ export const fornecedorCaioAragua: Fornecedor = {
 export const fornecedorWrEmbalagens: Fornecedor = {
   name: "WR Embalagens",
   phone: "5514981330675",
-  category: "Embalagens / Limpeza / Descartáveis",
+  category: "Embalagens, descartáveis e limpeza",
   purchaseFrequency: "Sob demanda",
 };
 
 export const fornecedorMariBlumax: Fornecedor = {
   name: "Mari Blumax",
   phone: "551433666410",
-  category: "Limpeza / Higiene",
+  category: "Limpeza e higiene",
   purchaseFrequency: "Sob demanda",
+};
+
+export const fornecedorMercado: Fornecedor = {
+  name: "Mercado",
+  phone: "",
+  category: "Alimentos, bebidas, limpeza e higiene",
+  purchaseFrequency: "Semanal",
 };
 
 export const produtosJoaoVero: ProdutoEstoque[] = [
@@ -71,7 +78,7 @@ export const produtosJoaoVero: ProdutoEstoque[] = [
   { id: "steinhaeger-becosa", name: "Steinhaeger Becosa", category: "Steinhaeger", supplier: fornecedorJoaoVero.name, unit: "garrafas", currentStock: 2, minimumStock: 2 },
   { id: "vale-veneto-tinto-seco", name: "Vale Veneto Tinto Seco", category: "Vinhos", supplier: fornecedorJoaoVero.name, unit: "garrafas", currentStock: 4, minimumStock: 4 },
   { id: "vale-veneto-tinto-suave", name: "Vale Veneto Tinto Suave", category: "Vinhos", supplier: fornecedorJoaoVero.name, unit: "garrafas", currentStock: 4, minimumStock: 4 },
-  { id: "vinho-do-porto", name: "Vinho do Porto", category: "Vinhos", supplier: fornecedorJoaoVero.name, unit: "garrafas", currentStock: 1, minimumStock: 1 },
+  { id: "vinho-do-porto", name: "Vinho do Porto", category: "Vinhos e fortificados", supplier: fornecedorJoaoVero.name, unit: "garrafas", currentStock: 1, minimumStock: 1 },
   { id: "vale-veneto-branco-seco", name: "Vale Veneto Branco Seco", category: "Vinhos", supplier: fornecedorJoaoVero.name, unit: "garrafas", currentStock: 4, minimumStock: 4 },
   { id: "periquita", name: "Periquita", category: "Vinhos", supplier: fornecedorJoaoVero.name, unit: "garrafas", currentStock: 4, minimumStock: 4 },
   { id: "miolo", name: "Miolo", category: "Vinhos", supplier: fornecedorJoaoVero.name, unit: "garrafas", currentStock: 4, minimumStock: 4 },
@@ -127,11 +134,29 @@ export const produtosWrEmbalagens: ProdutoEstoque[] = [
   { id: "rodo-fibra-com-cabo", name: "Rodo para fibra com cabo", category: fornecedorWrEmbalagens.category, supplier: fornecedorWrEmbalagens.name, unit: "unidade", currentStock: 2, minimumStock: 2 },
 ];
 
+export const produtosMercado: ProdutoEstoque[] = [
+  { id: "mercado-citrus", name: "Citrus", category: "Bebidas", supplier: fornecedorMercado.name, unit: "unidade", currentStock: 0, minimumStock: 0, unitPrice: 0 },
+  { id: "mercado-soda-caustica", name: "Soda cáustica", category: "Limpeza", supplier: fornecedorMercado.name, unit: "unidade", currentStock: 0, minimumStock: 0, unitPrice: 0 },
+  { id: "mercado-amaciante", name: "Amaciante", category: "Limpeza", supplier: fornecedorMercado.name, unit: "unidade", currentStock: 0, minimumStock: 0, unitPrice: 0 },
+  { id: "mercado-sabao-em-po", name: "Sabão em pó", category: "Limpeza", supplier: fornecedorMercado.name, unit: "pacote", currentStock: 0, minimumStock: 0, unitPrice: 0 },
+  { id: "mercado-fio-dental", name: "Fio dental", category: "Higiene", supplier: fornecedorMercado.name, unit: "unidade", currentStock: 0, minimumStock: 0, unitPrice: 0 },
+  { id: "mercado-pasta-de-dente", name: "Pasta de dente", category: "Higiene", supplier: fornecedorMercado.name, unit: "unidade", currentStock: 0, minimumStock: 0, unitPrice: 0 },
+  { id: "mercado-vela-aniversario", name: "Vela de aniversário", category: "Confeitaria", supplier: fornecedorMercado.name, unit: "pacote", currentStock: 0, minimumStock: 0, unitPrice: 0 },
+  { id: "mercado-morango", name: "Morango", category: "Hortifrúti", supplier: fornecedorMercado.name, unit: "bandeja", currentStock: 0, minimumStock: 0, unitPrice: 0 },
+  { id: "mercado-frutas-vermelhas", name: "Frutas vermelhas", category: "Hortifrúti", supplier: fornecedorMercado.name, unit: "pacote", currentStock: 0, minimumStock: 0, unitPrice: 0 },
+  { id: "mercado-laranja", name: "Laranja", category: "Hortifrúti", supplier: fornecedorMercado.name, unit: "kg", currentStock: 0, minimumStock: 0, unitPrice: 0 },
+  { id: "mercado-limao-siciliano", name: "Limão siciliano", category: "Hortifrúti", supplier: fornecedorMercado.name, unit: "kg", currentStock: 0, minimumStock: 0, unitPrice: 0 },
+  { id: "mercado-groselha", name: "Groselha", category: "Bebidas", supplier: fornecedorMercado.name, unit: "garrafa", currentStock: 0, minimumStock: 0, unitPrice: 0 },
+  { id: "mercado-sorvete", name: "Sorvete", category: "Congelados", supplier: fornecedorMercado.name, unit: "pote", currentStock: 0, minimumStock: 0, unitPrice: 0 },
+  { id: "mercado-azeite", name: "Azeite", category: "Mercearia", supplier: fornecedorMercado.name, unit: "garrafa", currentStock: 0, minimumStock: 0, unitPrice: 0 },
+];
+
 export const fornecedores = [
   fornecedorJoaoVero,
   fornecedorCaioAragua,
   fornecedorWrEmbalagens,
   fornecedorMariBlumax,
+  fornecedorMercado,
 ];
 
 export const produtosEstoque = [
@@ -139,4 +164,5 @@ export const produtosEstoque = [
   ...produtosCaioAragua,
   ...produtosWrEmbalagens,
   ...produtosMariBlumax,
+  ...produtosMercado,
 ];

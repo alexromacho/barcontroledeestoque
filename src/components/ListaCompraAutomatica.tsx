@@ -1,28 +1,35 @@
 import { useState } from "react";
-import { Pencil, Plus, Send, ShoppingBasket, Trash2, X } from "lucide-react";
-import { Fornecedor, ItemCompra, ProdutoEstoque } from "../types/estoque";
+import { Clipboard, Download, Pencil, Plus, Send, ShoppingBasket, Trash2, X } from "lucide-react";
+import { Fornecedor, ItemCompra, ListaSemanalRegistro, ProdutoEstoque } from "../types/estoque";
 
 type ListaCompraAutomaticaProps = {
   fornecedores: Fornecedor[];
   produtos: ProdutoEstoque[];
   itensCompraPorFornecedor: Record<string, ItemCompra[]>;
+  historicoListas: ListaSemanalRegistro[];
   onAdicionarManual: (produto: ProdutoEstoque, quantidade: number) => void;
   onEditarItem: (produto: ProdutoEstoque, quantidade: number) => void;
   onRemoverManual: (produtoId: string) => void;
-  onEnviarPedido: (fornecedor: Fornecedor, itensCompra: ItemCompra[]) => void;
+  onEnviarPedido: (fornecedor: Fornecedor, itens: ItemCompra[]) => void;
+  onGerarListaSemanal: () => string;
+  onLimparListaSemanal: () => void;
 };
 
 export function ListaCompraAutomatica({
   fornecedores,
   produtos,
   itensCompraPorFornecedor,
+  historicoListas,
   onAdicionarManual,
   onEditarItem,
   onRemoverManual,
   onEnviarPedido,
+  onGerarListaSemanal,
+  onLimparListaSemanal,
 }: ListaCompraAutomaticaProps) {
   const [produtoManualAbertoId, setProdutoManualAbertoId] = useState<string | null>(null);
   const [quantidadeManual, setQuantidadeManual] = useState("1");
+  const [listaSemanal, setListaSemanal] = useState("");
 
   function pedirQuantidade(label: string, quantidadeAtual = 1) {
     const resposta = window.prompt(label, quantidadeAtual.toString());
@@ -57,6 +64,35 @@ export function ListaCompraAutomatica({
     onEditarItem(item, quantidade);
   }
 
+  const quantidadeFornecedoresComPedido = fornecedores.filter(
+    (fornecedor) => (itensCompraPorFornecedor[fornecedor.name] ?? []).length > 0,
+  ).length;
+  const mesAtual = new Date().toISOString().slice(0, 7);
+  const totalDoMes = historicoListas
+    .filter((registro) => registro.createdAt.slice(0, 7) === mesAtual)
+    .reduce((total, registro) => total + registro.fornecedores.reduce(
+      (subtotal, fornecedor) => subtotal + fornecedor.itens.reduce(
+        (valor, item) => valor + item.quantity * item.unitPrice, 0,
+      ), 0,
+    ), 0);
+  const formatarValor = (valor: number) => valor.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+
+  function gerarListaSemanal() {
+    const conteudo = onGerarListaSemanal();
+    if (!conteudo) return;
+    setListaSemanal(conteudo);
+
+    const arquivo = new Blob([conteudo], { type: "text/plain;charset=utf-8" });
+    const url = URL.createObjectURL(arquivo);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "lista-da-semana.txt";
+    link.click();
+    URL.revokeObjectURL(url);
+    setListaSemanal("");
+    onLimparListaSemanal();
+  }
+
   return (
     <article className="teste-panel">
       <div className="teste-panel-heading">
@@ -66,6 +102,36 @@ export function ListaCompraAutomatica({
         </div>
         <ShoppingBasket size={24} />
       </div>
+
+      <div className="teste-whatsapp-geral">
+        <div>
+          <strong>LISTA DA SEMANA</strong>
+          <span>
+            Gere um bloco de notas com os itens de {quantidadeFornecedoresComPedido}{" "}
+            {quantidadeFornecedoresComPedido === 1 ? "fornecedor" : "fornecedores"}.
+          </span>
+        </div>
+        <button
+          type="button"
+          disabled={quantidadeFornecedoresComPedido === 0}
+          onClick={gerarListaSemanal}
+        >
+          <Download size={18} />
+          Gerar lista da semana
+        </button>
+      </div>
+
+      {listaSemanal && (
+        <div className="lista-semanal-preview">
+          <div>
+            <strong>Prévia da lista</strong>
+            <button type="button" onClick={() => navigator.clipboard.writeText(listaSemanal)}>
+              <Clipboard size={16} /> Copiar
+            </button>
+          </div>
+          <textarea readOnly rows={12} value={listaSemanal} aria-label="Lista da semana" />
+        </div>
+      )}
 
       <div className="teste-purchase-groups">
         {fornecedores.map((fornecedor) => {
@@ -82,10 +148,15 @@ export function ListaCompraAutomatica({
                   <span>Frequência de compra: {fornecedor.purchaseFrequency}</span>
                 </div>
 
-                <button type="button" onClick={() => onEnviarPedido(fornecedor, itensCompra)}>
+                <button
+                  type="button"
+                  disabled={itensCompra.length === 0}
+                  onClick={() => onEnviarPedido(fornecedor, itensCompra)}
+                >
                   <Send size={18} />
-                  Enviar pedido no WhatsApp
+                  Enviar para {fornecedor.name}
                 </button>
+
               </div>
 
               <div className="teste-purchase-list">
@@ -103,7 +174,10 @@ export function ListaCompraAutomatica({
                           Atual {item.currentStock} · mínimo {item.minimumStock}
                         </span>
                       </div>
-                      <b>Comprar {item.quantityToBuy} {item.unit}</b>
+                      <b>
+                        Comprar {item.quantityToBuy} {item.unit}
+                        {" · "}{formatarValor(item.quantityToBuy * (item.unitPrice ?? 0))}
+                      </b>
                       <div className="teste-purchase-actions">
                         <button type="button" onClick={() => editarItem(item)} aria-label={`Editar ${item.name}`}>
                           <Pencil size={16} />
@@ -189,6 +263,40 @@ export function ListaCompraAutomatica({
           );
         })}
       </div>
+
+      <section className="historico-listas-semana" aria-labelledby="historico-listas-title">
+        <div className="teste-panel-heading">
+          <div>
+            <span className="teste-eyebrow">Registros</span>
+            <h2 id="historico-listas-title">Histórico de Listas da Semana</h2>
+          </div>
+          <div className="historico-total-mes"><span>Total do mês</span><strong>{formatarValor(totalDoMes)}</strong></div>
+        </div>
+        {historicoListas.length === 0 ? (
+          <p className="teste-empty">Nenhuma lista da semana foi gerada.</p>
+        ) : (
+          <div className="historico-listas-grid">
+            {historicoListas.map((registro) => {
+              const totalSemana = registro.fornecedores.reduce((total, fornecedor) => total + fornecedor.itens.reduce((subtotal, item) => subtotal + item.quantity * item.unitPrice, 0), 0);
+              return (
+              <article className="historico-lista-card" key={registro.id}>
+                <header><strong>LISTA DA SEMANA · {formatarValor(totalSemana)}</strong><span>{registro.date} · {registro.time}</span></header>
+                {registro.fornecedores.map((fornecedor) => (
+                  <div className="historico-lista-fornecedor" key={fornecedor.name}>
+                    <strong>{fornecedor.name} · {formatarValor(fornecedor.itens.reduce((total, item) => total + item.quantity * item.unitPrice, 0))}</strong>
+                    <ul>
+                      {fornecedor.itens.map((item, indice) => (
+                        <li key={`${item.name}-${indice}`}>{item.quantity} {item.unit} de {item.name} — {formatarValor(item.quantity * item.unitPrice)}</li>
+                      ))}
+                    </ul>
+                  </div>
+                ))}
+              </article>
+              );
+            })}
+          </div>
+        )}
+      </section>
     </article>
   );
 }

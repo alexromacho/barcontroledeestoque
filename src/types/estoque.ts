@@ -6,10 +6,12 @@ export type ProdutoEstoque = {
   unit: string;
   currentStock: number;
   minimumStock: number;
+  unitPrice?: number;
 };
 
 export type SaidaEstoque = {
   id: string;
+  date: string;
   time: string;
   productName: string;
   category: string;
@@ -40,4 +42,20 @@ export type Fornecedor = {
   phone: string;
   category: string;
   purchaseFrequency: string;
+};
+
+export type ListaSemanalRegistro = {
+  id: string;
+  createdAt: string;
+  date: string;
+  time: string;
+  fornecedores: Array<{
+    name: string;
+    itens: Array<{
+      name: string;
+      quantity: number;
+      unit: string;
+      unitPrice: number;
+    }>;
+  }>;
 };

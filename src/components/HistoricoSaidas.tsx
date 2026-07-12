@@ -18,6 +18,7 @@ export function HistoricoSaidas({ historicoSaidas }: HistoricoSaidasProps) {
         <table className="teste-table">
           <thead>
             <tr>
+              <th>Data</th>
               <th>Horário</th>
               <th>Produto</th>
               <th>Categoria</th>
@@ -31,11 +32,12 @@ export function HistoricoSaidas({ historicoSaidas }: HistoricoSaidasProps) {
           <tbody>
             {historicoSaidas.length === 0 ? (
               <tr>
-                <td colSpan={8}>Nenhuma saída registrada hoje.</td>
+                <td colSpan={9}>Nenhuma saída registrada hoje.</td>
               </tr>
             ) : (
               historicoSaidas.map((record) => (
                 <tr key={record.id}>
+                  <td>{record.date}</td>
                   <td>{record.time}</td>
                   <td>{record.productName}</td>
                   <td>{record.category}</td>
