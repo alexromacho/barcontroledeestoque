@@ -1,7 +1,7 @@
 import { Fornecedor, ProdutoEstoque } from "../types/estoque";
 
 export const fornecedorJoaoVero: Fornecedor = {
-  name: "João Vero Importa",
+  name: "João Vero Imports",
   phone: "5514996511343",
   category: "Bebidas / Destilados / Vinhos",
   purchaseFrequency: "semanal",
@@ -56,6 +56,7 @@ export const produtosJoaoVero: ProdutoEstoque[] = [
   { id: "underberg", name: "Underberg", category: "Licores e Aperitivos", supplier: fornecedorJoaoVero.name, unit: "garrafas", currentStock: 1, minimumStock: 1 },
   { id: "campari", name: "Campari", category: "Licores e Aperitivos", supplier: fornecedorJoaoVero.name, unit: "garrafas", currentStock: 6, minimumStock: 6 },
   { id: "jagermeister", name: "Jägermeister", category: "Licores e Aperitivos", supplier: fornecedorJoaoVero.name, unit: "garrafas", currentStock: 6, minimumStock: 6 },
+  { id: "licor-menta-stock", name: "Licor de Menta Stock", category: "Licores", supplier: fornecedorJoaoVero.name, unit: "garrafas", currentStock: 1, minimumStock: 1 },
   { id: "boazinha", name: "Cachaça Boazinha", category: "Cachaças", supplier: fornecedorJoaoVero.name, unit: "garrafas", currentStock: 4, minimumStock: 4 },
   { id: "seleta", name: "Seleta", category: "Cachaças", supplier: fornecedorJoaoVero.name, unit: "garrafas", currentStock: 4, minimumStock: 4 },
   { id: "claudionor", name: "Claudionor", category: "Cachaças", supplier: fornecedorJoaoVero.name, unit: "garrafas", currentStock: 4, minimumStock: 4 },
@@ -70,6 +71,7 @@ export const produtosJoaoVero: ProdutoEstoque[] = [
   { id: "steinhaeger-becosa", name: "Steinhaeger Becosa", category: "Steinhaeger", supplier: fornecedorJoaoVero.name, unit: "garrafas", currentStock: 2, minimumStock: 2 },
   { id: "vale-veneto-tinto-seco", name: "Vale Veneto Tinto Seco", category: "Vinhos", supplier: fornecedorJoaoVero.name, unit: "garrafas", currentStock: 4, minimumStock: 4 },
   { id: "vale-veneto-tinto-suave", name: "Vale Veneto Tinto Suave", category: "Vinhos", supplier: fornecedorJoaoVero.name, unit: "garrafas", currentStock: 4, minimumStock: 4 },
+  { id: "vinho-do-porto", name: "Vinho do Porto", category: "Vinhos", supplier: fornecedorJoaoVero.name, unit: "garrafas", currentStock: 1, minimumStock: 1 },
   { id: "vale-veneto-branco-seco", name: "Vale Veneto Branco Seco", category: "Vinhos", supplier: fornecedorJoaoVero.name, unit: "garrafas", currentStock: 4, minimumStock: 4 },
   { id: "periquita", name: "Periquita", category: "Vinhos", supplier: fornecedorJoaoVero.name, unit: "garrafas", currentStock: 4, minimumStock: 4 },
   { id: "miolo", name: "Miolo", category: "Vinhos", supplier: fornecedorJoaoVero.name, unit: "garrafas", currentStock: 4, minimumStock: 4 },

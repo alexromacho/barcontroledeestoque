@@ -11,7 +11,7 @@ export function EstoqueProdutos({ produtos }: EstoqueProdutosProps) {
       <div className="teste-panel-heading">
         <div>
           <span className="teste-eyebrow">Seção 2</span>
-          <h2>Estoque João Vero Importa</h2>
+          <h2>Estoque de Produtos</h2>
         </div>
         <Truck size={24} />
       </div>

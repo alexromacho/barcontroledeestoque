@@ -20,8 +20,19 @@ export type SaidaEstoque = {
   supplier: string;
 };
 
+export type OrigemItemCompra = "automatico" | "manual";
+
+export type ItemCompraManual = {
+  produtoId: string;
+  fornecedorId: string;
+  quantidade: number;
+};
+
 export type ItemCompra = ProdutoEstoque & {
   quantityToBuy: number;
+  origem: OrigemItemCompra;
+  quantidadeAutomatica: number;
+  quantidadeManual: number;
 };
 
 export type Fornecedor = {

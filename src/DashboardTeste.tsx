@@ -1,12 +1,14 @@
-import { FormEvent, ReactNode, useMemo, useState } from "react";
+import { FormEvent, useEffect, useMemo, useState } from "react";
 import { createRoot } from "react-dom/client";
-import { AlertTriangle, ArrowDownCircle, ClipboardList, Truck } from "lucide-react";
+import { DashboardHeader } from "./components/DashboardHeader";
 import { EstoqueProdutos } from "./components/EstoqueProdutos";
 import { HistoricoSaidas } from "./components/HistoricoSaidas";
 import { ListaCompraAutomatica } from "./components/ListaCompraAutomatica";
 import { SaidaDoDia } from "./components/SaidaDoDia";
+import { Sidebar } from "./components/Sidebar";
+import { SummaryCards } from "./components/SummaryCards";
 import { fornecedores, produtosEstoque } from "./data/produtosJoaoVero";
-import { Fornecedor, ItemCompra, ProdutoEstoque, SaidaEstoque } from "./types/estoque";
+import { Fornecedor, ItemCompra, ItemCompraManual, ProdutoEstoque, SaidaEstoque } from "./types/estoque";
 import "./styles.css";
 
 function normalizarTexto(texto: string) {
@@ -24,7 +26,28 @@ function DashboardTeste() {
   const [selectedProductId, setSelectedProductId] = useState(produtosEstoque[0].id);
   const [quantity, setQuantity] = useState("1");
   const [historicoSaidas, setHistoricoSaidas] = useState<SaidaEstoque[]>([]);
+  const [itensCompraManual, setItensCompraManual] = useState<ItemCompraManual[]>([]);
   const [message, setMessage] = useState("");
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [currentDateTime, setCurrentDateTime] = useState(() =>
+    new Date().toLocaleString("pt-BR", {
+      dateStyle: "short",
+      timeStyle: "short",
+    }),
+  );
+
+  useEffect(() => {
+    const interval = window.setInterval(() => {
+      setCurrentDateTime(
+        new Date().toLocaleString("pt-BR", {
+          dateStyle: "short",
+          timeStyle: "short",
+        }),
+      );
+    }, 30_000);
+
+    return () => window.clearInterval(interval);
+  }, []);
 
   const produtosFiltrados = useMemo(() => {
     const busca = normalizarTexto(termoBusca);
@@ -40,13 +63,25 @@ function DashboardTeste() {
   const selectedProduct = produtos.find((product) => product.id === selectedProductId);
 
   const itensCompra = useMemo<ItemCompra[]>(() => {
-    return produtos
-      .filter((product) => product.currentStock < product.minimumStock)
-      .map((product) => ({
+    return produtos.reduce<ItemCompra[]>((items, product) => {
+      const quantidadeAutomatica = Math.max(0, product.minimumStock - product.currentStock);
+      const itemManual = itensCompraManual.find((item) => item.produtoId === product.id);
+      const quantidadeManual = itemManual?.quantidade ?? 0;
+      const quantityToBuy = Math.max(quantidadeAutomatica, quantidadeManual);
+
+      if (quantityToBuy <= 0) return items;
+
+      items.push({
         ...product,
-        quantityToBuy: product.minimumStock - product.currentStock,
-      }));
-  }, [produtos]);
+        quantityToBuy,
+        origem: quantidadeManual > quantidadeAutomatica ? "manual" : "automatico",
+        quantidadeAutomatica,
+        quantidadeManual,
+      });
+
+      return items;
+    }, []);
+  }, [itensCompraManual, produtos]);
 
   const itensCompraPorFornecedor = useMemo(() => {
     return itensCompra.reduce<Record<string, ItemCompra[]>>((groups, item) => {
@@ -55,9 +90,8 @@ function DashboardTeste() {
     }, {});
   }, [itensCompra]);
 
-  const lowStockCount = itensCompra.length;
-  const activeSuppliers = fornecedores.length;
-  const todayExits = historicoSaidas.reduce((total, record) => total + record.quantity, 0);
+  const lowStockCount = produtos.filter((product) => product.currentStock < product.minimumStock).length;
+  const estoqueTotal = produtos.reduce((total, product) => total + product.currentStock, 0);
   const selectedUnit = selectedProduct?.unit ?? "unidades";
 
   function registerExit(event: FormEvent) {
@@ -108,90 +142,150 @@ function DashboardTeste() {
 
   function sendPurchaseOrder(fornecedor: Fornecedor, itensDoFornecedor: ItemCompra[]) {
     const linhasPedido = itensDoFornecedor.length > 0
-      ? itensDoFornecedor.map((item) => `- ${item.name}: comprar ${item.quantityToBuy} ${item.unit}`).join("\n")
+      ? itensDoFornecedor.map((item) => `* ${item.quantityToBuy} ${item.unit} de ${item.name}`).join("\n")
       : "- Nenhum item abaixo do mínimo no momento.";
     const mensagem = encodeURIComponent(
-      `Olá, ${fornecedor.name}! Pedido sugerido do Bar do Português:\n\n${linhasPedido}`,
+      `Olá, tudo bem? Boa tarde, preciso de:\n\n${linhasPedido}\n\nObrigado.`,
     );
+    const url = `https://wa.me/${fornecedor.phone}?text=${mensagem}`;
 
     setMessage(`Pedido enviado para ${fornecedor.name}`);
-    window.location.href = `https://wa.me/${fornecedor.phone}?text=${mensagem}`;
+    window.open(url, "_blank");
+  }
+
+  function addManualPurchaseItem(product: ProdutoEstoque, quantidade: number) {
+    if (!Number.isFinite(quantidade) || quantidade <= 0) {
+      setMessage("Informe uma quantidade maior que zero.");
+      return;
+    }
+
+    setItensCompraManual((items) => {
+      const itemAtual = items.find((item) => item.produtoId === product.id);
+
+      if (itemAtual) {
+        return items.map((item) =>
+          item.produtoId === product.id
+            ? { ...item, quantidade: item.quantidade + quantidade }
+            : item,
+        );
+      }
+
+      return [
+        ...items,
+        {
+          produtoId: product.id,
+          fornecedorId: product.supplier,
+          quantidade,
+        },
+      ];
+    });
+
+    setMessage(`${product.name}: adicionado à lista de compra.`);
+  }
+
+  function editPurchaseItem(product: ProdutoEstoque, quantidade: number) {
+    if (!Number.isFinite(quantidade) || quantidade <= 0) {
+      setMessage("Informe uma quantidade maior que zero.");
+      return;
+    }
+
+    const quantidadeAutomatica = Math.max(0, product.minimumStock - product.currentStock);
+
+    if (quantidadeAutomatica > 0 && quantidade < quantidadeAutomatica) {
+      setMessage(`A quantidade mínima automática para ${product.name} é ${quantidadeAutomatica} ${product.unit}.`);
+      return;
+    }
+
+    setItensCompraManual((items) => {
+      const itemAtual = items.find((item) => item.produtoId === product.id);
+
+      if (itemAtual) {
+        return items.map((item) =>
+          item.produtoId === product.id ? { ...item, quantidade } : item,
+        );
+      }
+
+      return [
+        ...items,
+        {
+          produtoId: product.id,
+          fornecedorId: product.supplier,
+          quantidade,
+        },
+      ];
+    });
+
+    setMessage(`${product.name}: quantidade atualizada na lista.`);
+  }
+
+  function removeManualPurchaseItem(productId: string) {
+    setItensCompraManual((items) => items.filter((item) => item.produtoId !== productId));
+    setMessage("Item manual removido da lista de compra.");
   }
 
   return (
-    <main className="teste-shell">
-      <header className="teste-header">
-        <div>
-          <span className="teste-eyebrow">Sistema interno</span>
-          <h1>Dashboard - Bar do Português</h1>
-          <p>Controle de saídas, estoque e pedidos de compra</p>
-        </div>
-        <div className="teste-badge">Mock front-end</div>
-      </header>
-
-      <section className="teste-section-block" aria-labelledby="resumo-title">
-        <div className="teste-section-title">
-          <span className="teste-eyebrow">Dashboard</span>
-          <h2 id="resumo-title">Resumo</h2>
-        </div>
-        <div className="teste-metrics" aria-label="Indicadores">
-          <MetricCard icon={<AlertTriangle />} label="Produtos com estoque baixo" value={lowStockCount.toString()} tone="danger" />
-          <MetricCard icon={<ArrowDownCircle />} label="Saídas registradas hoje" value={todayExits.toString()} tone="neutral" />
-          <MetricCard icon={<Truck />} label="Fornecedores ativos" value={activeSuppliers.toString()} tone="good" />
-          <MetricCard icon={<ClipboardList />} label="Itens na lista de compra" value={itensCompra.length.toString()} tone="warning" />
-        </div>
-      </section>
-
-      {message && (
-        <button className="teste-notice" type="button" onClick={() => setMessage("")}>
-          {message}
-        </button>
+    <div className="dashboard-layout">
+      {sidebarOpen && (
+        <button
+          className="sidebar-backdrop"
+          type="button"
+          aria-label="Fechar menu"
+          onClick={() => setSidebarOpen(false)}
+        />
       )}
+      <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
-      <section className="teste-grid">
-        <SaidaDoDia
-          termoBusca={termoBusca}
-          setTermoBusca={setTermoBusca}
-          produtosFiltrados={produtosFiltrados}
-          selectedProductId={selectedProductId}
-          setSelectedProductId={setSelectedProductId}
-          selectedProduct={selectedProduct}
-          quantity={quantity}
-          setQuantity={setQuantity}
-          selectedUnit={selectedUnit}
-          onSubmit={registerExit}
-        />
+      <main className="dashboard-main">
+        <div className="dashboard-watermark" aria-hidden="true" />
+        <div className="dashboard-content">
+          <DashboardHeader
+            currentDateTime={currentDateTime}
+            onOpenMenu={() => setSidebarOpen(true)}
+          />
 
-        <ListaCompraAutomatica
-          fornecedores={fornecedores}
-          itensCompraPorFornecedor={itensCompraPorFornecedor}
-          onEnviarPedido={sendPurchaseOrder}
-        />
-      </section>
+          <SummaryCards
+            produtosCadastrados={produtos.length}
+            estoqueTotal={estoqueTotal}
+            abaixoDoMinimo={lowStockCount}
+            itensParaComprar={itensCompra.length}
+          />
 
-      <EstoqueProdutos produtos={produtos} />
-      <HistoricoSaidas historicoSaidas={historicoSaidas} />
-    </main>
-  );
-}
+          {message && (
+            <button className="teste-notice" type="button" onClick={() => setMessage("")}>
+              {message}
+            </button>
+          )}
 
-function MetricCard({
-  icon,
-  label,
-  value,
-  tone,
-}: {
-  icon: ReactNode;
-  label: string;
-  value: string;
-  tone: "danger" | "warning" | "good" | "neutral";
-}) {
-  return (
-    <article className={`teste-metric ${tone}`}>
-      <div>{icon}</div>
-      <span>{label}</span>
-      <strong>{value}</strong>
-    </article>
+          <section className="teste-grid">
+            <SaidaDoDia
+              termoBusca={termoBusca}
+              setTermoBusca={setTermoBusca}
+              produtosFiltrados={produtosFiltrados}
+              selectedProductId={selectedProductId}
+              setSelectedProductId={setSelectedProductId}
+              selectedProduct={selectedProduct}
+              quantity={quantity}
+              setQuantity={setQuantity}
+              selectedUnit={selectedUnit}
+              onSubmit={registerExit}
+            />
+
+            <ListaCompraAutomatica
+              fornecedores={fornecedores}
+              produtos={produtos}
+              itensCompraPorFornecedor={itensCompraPorFornecedor}
+              onAdicionarManual={addManualPurchaseItem}
+              onEditarItem={editPurchaseItem}
+              onRemoverManual={removeManualPurchaseItem}
+              onEnviarPedido={sendPurchaseOrder}
+            />
+          </section>
+
+          <EstoqueProdutos produtos={produtos} />
+          <HistoricoSaidas historicoSaidas={historicoSaidas} />
+        </div>
+      </main>
+    </div>
   );
 }
 
