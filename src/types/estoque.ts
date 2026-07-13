@@ -9,8 +9,11 @@ export type ProdutoEstoque = {
   unitPrice?: number;
 };
 
-export type SaidaEstoque = {
+export type TipoMovimentacao = "entrada" | "saida";
+
+export type MovimentacaoEstoque = {
   id: string;
+  tipo: TipoMovimentacao;
   date: string;
   time: string;
   productName: string;
@@ -21,6 +24,9 @@ export type SaidaEstoque = {
   currentStock: number;
   supplier: string;
 };
+
+// Alias temporário para consumidores que ainda usam o nome histórico de saída.
+export type SaidaEstoque = MovimentacaoEstoque;
 
 export type OrigemItemCompra = "automatico" | "manual";
 

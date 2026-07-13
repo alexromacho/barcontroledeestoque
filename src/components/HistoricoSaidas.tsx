@@ -1,16 +1,17 @@
-import { SaidaEstoque } from "../types/estoque";
+import { formatarQuantidadeMovimentacao, obterRotuloMovimentacao } from "../domain/rules/formatarMovimentacao";
+import type { MovimentacaoEstoque } from "../types/estoque";
 
 type HistoricoSaidasProps = {
-  historicoSaidas: SaidaEstoque[];
+  movimentacoes: MovimentacaoEstoque[];
 };
 
-export function HistoricoSaidas({ historicoSaidas }: HistoricoSaidasProps) {
+export function HistoricoSaidas({ movimentacoes }: HistoricoSaidasProps) {
   return (
     <section className="teste-panel">
       <div className="teste-panel-heading">
         <div>
           <span className="teste-eyebrow">Seção 4</span>
-          <h2>Histórico de Saídas do Dia</h2>
+          <h2>Histórico de Movimentações do Dia</h2>
         </div>
       </div>
 
@@ -20,6 +21,7 @@ export function HistoricoSaidas({ historicoSaidas }: HistoricoSaidasProps) {
             <tr>
               <th>Data</th>
               <th>Horário</th>
+              <th>Tipo</th>
               <th>Produto</th>
               <th>Categoria</th>
               <th>Quantidade</th>
@@ -30,18 +32,19 @@ export function HistoricoSaidas({ historicoSaidas }: HistoricoSaidasProps) {
             </tr>
           </thead>
           <tbody>
-            {historicoSaidas.length === 0 ? (
+            {movimentacoes.length === 0 ? (
               <tr>
-                <td colSpan={9}>Nenhuma saída registrada hoje.</td>
+                <td colSpan={10}>Nenhuma movimentação registrada hoje.</td>
               </tr>
             ) : (
-              historicoSaidas.map((record) => (
-                <tr key={record.id}>
+              movimentacoes.map((record) => (
+                <tr className={`movimentacao--${record.tipo}`} key={record.id}>
                   <td>{record.date}</td>
                   <td>{record.time}</td>
+                  <td><span className="movimentacao-tipo">{obterRotuloMovimentacao(record.tipo)}</span></td>
                   <td>{record.productName}</td>
                   <td>{record.category}</td>
-                  <td>{record.quantity}</td>
+                  <td>{formatarQuantidadeMovimentacao(record.tipo, record.quantity, record.unit)}</td>
                   <td>{record.unit}</td>
                   <td>{record.previousStock}</td>
                   <td>{record.currentStock}</td>

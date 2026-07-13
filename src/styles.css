@@ -719,6 +719,25 @@ a {
   background: #ffb19f;
 }
 
+.movimentacao-tipo {
+  display: inline-flex;
+  border-radius: 999px;
+  padding: 4px 9px;
+  font-size: .72rem;
+  font-weight: 850;
+  text-transform: uppercase;
+}
+
+.movimentacao--entrada .movimentacao-tipo {
+  color: var(--bar-green-dark);
+  background: rgba(0, 107, 60, .12);
+}
+
+.movimentacao--saida .movimentacao-tipo {
+  color: #8f1d17;
+  background: #fff0ef;
+}
+
 @media (max-width: 900px) {
   .teste-shell {
     padding: 16px;

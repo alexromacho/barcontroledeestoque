@@ -32,6 +32,9 @@ export function EstoqueProdutos({ produtos, onRegistrarEntrada }: EstoqueProduto
     onRegistrarEntrada(produtoId, valor);
     setProdutoId("");
     setQuantidade("1");
+    setFotoNota(null);
+    if (fotoUrl) URL.revokeObjectURL(fotoUrl);
+    setFotoUrl("");
   }
 
   return (

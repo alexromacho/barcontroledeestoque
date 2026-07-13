@@ -1,41 +1,13 @@
-import { Fornecedor, ProdutoEstoque } from "../types/estoque";
+import type { Produto } from "../domain/entities/Produto";
+import {
+  fornecedorCaioAragua,
+  fornecedorJoaoVero,
+  fornecedorMariBlumax,
+  fornecedorMercado,
+  fornecedorWrEmbalagens,
+} from "./fornecedores";
 
-export const fornecedorJoaoVero: Fornecedor = {
-  name: "João Vero Imports",
-  phone: "5514996511343",
-  category: "Bebidas alcoólicas, vinhos, energéticos e licores",
-  purchaseFrequency: "Semanal",
-};
-
-export const fornecedorCaioAragua: Fornecedor = {
-  name: "Caio Aragua",
-  phone: "5514981012021",
-  category: "Água",
-  purchaseFrequency: "Sob demanda",
-};
-
-export const fornecedorWrEmbalagens: Fornecedor = {
-  name: "WR Embalagens",
-  phone: "5514981330675",
-  category: "Embalagens, descartáveis e limpeza",
-  purchaseFrequency: "Sob demanda",
-};
-
-export const fornecedorMariBlumax: Fornecedor = {
-  name: "Mari Blumax",
-  phone: "551433666410",
-  category: "Limpeza e higiene",
-  purchaseFrequency: "Sob demanda",
-};
-
-export const fornecedorMercado: Fornecedor = {
-  name: "Mercado",
-  phone: "",
-  category: "Alimentos, bebidas, limpeza e higiene",
-  purchaseFrequency: "Semanal",
-};
-
-export const produtosJoaoVero: ProdutoEstoque[] = [
+export const produtosDoJoaoVero: Produto[] = [
   { id: "red-label", name: "Red Label", category: "Whisky", supplier: fornecedorJoaoVero.name, unit: "garrafas", currentStock: 4, minimumStock: 4 },
   { id: "black-label", name: "Black Label", category: "Whisky", supplier: fornecedorJoaoVero.name, unit: "garrafas", currentStock: 5, minimumStock: 4 },
   { id: "jack-daniels", name: "Jack Daniel's", category: "Whisky", supplier: fornecedorJoaoVero.name, unit: "garrafas", currentStock: 4, minimumStock: 4 },
@@ -93,7 +65,7 @@ export const produtosJoaoVero: ProdutoEstoque[] = [
   { id: "ice-smirnoff", name: "Ice Smirnoff", category: "Ice", supplier: fornecedorJoaoVero.name, unit: "fardos", currentStock: 1, minimumStock: 1 },
 ];
 
-export const produtosMariBlumax: ProdutoEstoque[] = [
+export const produtosMariBlumax: Produto[] = [
   { id: "alcool", name: "Álcool", category: fornecedorMariBlumax.category, supplier: fornecedorMariBlumax.name, unit: "unidade/galão", currentStock: 6, minimumStock: 6 },
   { id: "limpador-geral", name: "Limpador geral", category: fornecedorMariBlumax.category, supplier: fornecedorMariBlumax.name, unit: "unidade/galão", currentStock: 4, minimumStock: 4 },
   { id: "limpa-aluminio", name: "Limpa alumínio", category: fornecedorMariBlumax.category, supplier: fornecedorMariBlumax.name, unit: "unidade", currentStock: 2, minimumStock: 2 },
@@ -102,12 +74,12 @@ export const produtosMariBlumax: ProdutoEstoque[] = [
   { id: "rolo-papel-maos", name: "Rolo de papel para mãos", category: fornecedorMariBlumax.category, supplier: fornecedorMariBlumax.name, unit: "rolo/fardo", currentStock: 4, minimumStock: 4 },
 ];
 
-export const produtosCaioAragua: ProdutoEstoque[] = [
+export const produtosCaioAragua: Produto[] = [
   { id: "agua-sem-gas", name: "Água sem gás", category: fornecedorCaioAragua.category, supplier: fornecedorCaioAragua.name, unit: "fardo", currentStock: 15, minimumStock: 15 },
   { id: "agua-com-gas", name: "Água com gás", category: fornecedorCaioAragua.category, supplier: fornecedorCaioAragua.name, unit: "fardo", currentStock: 6, minimumStock: 6 },
 ];
 
-export const produtosWrEmbalagens: ProdutoEstoque[] = [
+export const produtosWrEmbalagens: Produto[] = [
   { id: "copo-50-ml", name: "Copo 50 ml", category: fornecedorWrEmbalagens.category, supplier: fornecedorWrEmbalagens.name, unit: "pacote", currentStock: 2, minimumStock: 2 },
   { id: "copo-500-ml", name: "Copo 500 ml", category: fornecedorWrEmbalagens.category, supplier: fornecedorWrEmbalagens.name, unit: "pacote", currentStock: 4, minimumStock: 4 },
   { id: "copo-700-ml", name: "Copo 700 ml", category: fornecedorWrEmbalagens.category, supplier: fornecedorWrEmbalagens.name, unit: "pacote", currentStock: 4, minimumStock: 4 },
@@ -134,7 +106,7 @@ export const produtosWrEmbalagens: ProdutoEstoque[] = [
   { id: "rodo-fibra-com-cabo", name: "Rodo para fibra com cabo", category: fornecedorWrEmbalagens.category, supplier: fornecedorWrEmbalagens.name, unit: "unidade", currentStock: 2, minimumStock: 2 },
 ];
 
-export const produtosMercado: ProdutoEstoque[] = [
+export const produtosMercado: Produto[] = [
   { id: "mercado-citrus", name: "Citrus", category: "Bebidas", supplier: fornecedorMercado.name, unit: "unidade", currentStock: 0, minimumStock: 0, unitPrice: 0 },
   { id: "mercado-soda-caustica", name: "Soda cáustica", category: "Limpeza", supplier: fornecedorMercado.name, unit: "unidade", currentStock: 0, minimumStock: 0, unitPrice: 0 },
   { id: "mercado-amaciante", name: "Amaciante", category: "Limpeza", supplier: fornecedorMercado.name, unit: "unidade", currentStock: 0, minimumStock: 0, unitPrice: 0 },
@@ -151,16 +123,8 @@ export const produtosMercado: ProdutoEstoque[] = [
   { id: "mercado-azeite", name: "Azeite", category: "Mercearia", supplier: fornecedorMercado.name, unit: "garrafa", currentStock: 0, minimumStock: 0, unitPrice: 0 },
 ];
 
-export const fornecedores = [
-  fornecedorJoaoVero,
-  fornecedorCaioAragua,
-  fornecedorWrEmbalagens,
-  fornecedorMariBlumax,
-  fornecedorMercado,
-];
-
-export const produtosEstoque = [
-  ...produtosJoaoVero,
+export const produtosEstoque: Produto[] = [
+  ...produtosDoJoaoVero,
   ...produtosCaioAragua,
   ...produtosWrEmbalagens,
   ...produtosMariBlumax,

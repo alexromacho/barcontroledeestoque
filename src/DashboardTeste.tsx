@@ -11,10 +11,15 @@ import { LoginPage } from "./components/LoginPage";
 import { SaidaDoDia, SaidaPendente } from "./components/SaidaDoDia";
 import { Sidebar } from "./components/Sidebar";
 import { SummaryCards } from "./components/SummaryCards";
-import { fornecedores, produtosEstoque } from "./data/produtosJoaoVero";
-import { Fornecedor, ItemCompra, ItemCompraManual, ListaSemanalRegistro, ProdutoEstoque, SaidaEstoque } from "./types/estoque";
+import { agruparListaCompraPorFornecedor, gerarListaCompra } from "./application/useCases/GerarListaCompra";
+import { montarPedidoFornecedor } from "./application/useCases/MontarPedidoFornecedor";
+import { registrarEntradaEstoque } from "./application/useCases/RegistrarEntradaEstoque";
+import { registrarSaidasEstoque, validarSaidaPendente } from "./application/useCases/RegistrarSaidaEstoque";
+import { fornecedores } from "./data/fornecedores";
+import { produtosEstoque } from "./data/produtos";
+import { Fornecedor, ItemCompra, ItemCompraManual, ListaSemanalRegistro, MovimentacaoEstoque, ProdutoEstoque } from "./types/estoque";
 import { normalizarTexto } from "./utils/normalizarTexto";
-import { criarMensagemPedido, criarUrlWhatsApp } from "./utils/whatsapp";
+import { abrirPedidoWhatsApp } from "./infrastructure/services/WhatsAppService";
 import { supabase } from "./lib/supabase";
 import "./styles.css";
 
@@ -23,7 +28,7 @@ function DashboardTeste({ onLogout }: { onLogout: () => void }) {
   const [termoBusca, setTermoBusca] = useState("");
   const [selectedProductId, setSelectedProductId] = useState("");
   const [quantity, setQuantity] = useState("1");
-  const [historicoSaidas, setHistoricoSaidas] = useState<SaidaEstoque[]>([]);
+  const [historicoMovimentacoes, setHistoricoMovimentacoes] = useState<MovimentacaoEstoque[]>([]);
   const [saidasPendentes, setSaidasPendentes] = useState<SaidaPendente[]>([]);
   const [itensCompraManual, setItensCompraManual] = useState<ItemCompraManual[]>([]);
   const [itensCompraOcultos, setItensCompraOcultos] = useState<Set<string>>(() => new Set());
@@ -65,36 +70,21 @@ function DashboardTeste({ onLogout }: { onLogout: () => void }) {
   const selectedProduct = produtos.find((product) => product.id === selectedProductId);
 
   const itensCompra = useMemo<ItemCompra[]>(() => {
-    return produtos.reduce<ItemCompra[]>((items, product) => {
-      if (itensCompraOcultos.has(product.id)) return items;
-      const quantidadeAutomatica = Math.max(0, product.minimumStock - product.currentStock);
-      const itemManual = itensCompraManual.find((item) => item.produtoId === product.id);
-      const quantidadeManual = itemManual?.quantidade ?? 0;
-      const quantityToBuy = Math.max(quantidadeAutomatica, quantidadeManual);
-
-      if (quantityToBuy <= 0) return items;
-
-      items.push({
-        ...product,
-        quantityToBuy,
-        origem: quantidadeManual > quantidadeAutomatica ? "manual" : "automatico",
-        quantidadeAutomatica,
-        quantidadeManual,
-      });
-
-      return items;
-    }, []);
+    return gerarListaCompra({
+      produtos,
+      itensManuais: itensCompraManual,
+      itensOcultos: itensCompraOcultos,
+    });
   }, [itensCompraManual, itensCompraOcultos, produtos]);
 
   const itensCompraPorFornecedor = useMemo(() => {
-    return itensCompra.reduce<Record<string, ItemCompra[]>>((groups, item) => {
-      groups[item.supplier] = [...(groups[item.supplier] ?? []), item];
-      return groups;
-    }, {});
+    return agruparListaCompraPorFornecedor(itensCompra);
   }, [itensCompra]);
 
   const lowStockCount = produtos.filter((product) => product.currentStock < product.minimumStock).length;
-  const todayExits = historicoSaidas.reduce((total, record) => total + record.quantity, 0);
+  const todayExits = historicoMovimentacoes
+    .filter((record) => record.tipo === "saida")
+    .reduce((total, record) => total + record.quantity, 0);
   const selectedUnit = selectedProduct?.unit ?? "unidades";
 
   function registerExit(event: FormEvent) {
@@ -103,7 +93,7 @@ function DashboardTeste({ onLogout }: { onLogout: () => void }) {
     const product = produtos.find((item) => item.id === selectedProductId);
     const exitQuantity = Number(quantity);
 
-    if (!product || !Number.isFinite(exitQuantity) || exitQuantity <= 0) {
+    if (!product) {
       setMessage("Selecione um produto e informe uma quantidade válida.");
       return;
     }
@@ -112,8 +102,10 @@ function DashboardTeste({ onLogout }: { onLogout: () => void }) {
       .filter((saida) => saida.product.id === product.id)
       .reduce((total, saida) => total + saida.quantity, 0);
 
-    if (exitQuantity + quantidadeJaPendente > product.currentStock) {
-      setMessage("A quantidade informada é maior que o estoque atual.");
+    try {
+      validarSaidaPendente(product, exitQuantity, quantidadeJaPendente);
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "Não foi possível registrar a saída.");
       return;
     }
 
@@ -128,35 +120,19 @@ function DashboardTeste({ onLogout }: { onLogout: () => void }) {
   function confirmPendingExits() {
     if (saidasPendentes.length === 0) return;
 
-    const agora = new Date();
     const totais = saidasPendentes.reduce<Record<string, number>>((acc, saida) => {
       acc[saida.product.id] = (acc[saida.product.id] ?? 0) + saida.quantity;
       return acc;
     }, {});
-    const novasSaidas: SaidaEstoque[] = produtos
-      .filter((produto) => (totais[produto.id] ?? 0) > 0)
-      .map((produto) => {
-        const quantidade = totais[produto.id];
-        return {
-          id: `${Date.now()}-${produto.id}-${crypto.randomUUID()}`,
-          date: agora.toLocaleDateString("pt-BR"),
-          time: agora.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }),
-          productName: produto.name,
-          category: produto.category,
-          quantity: quantidade,
-          unit: produto.unit,
-          previousStock: produto.currentStock,
-          currentStock: produto.currentStock - quantidade,
-          supplier: produto.supplier,
-        };
-      });
+    const { produtosAtualizados, movimentacoes } = registrarSaidasEstoque(
+      produtos,
+      totais,
+      new Date(),
+      () => crypto.randomUUID(),
+    );
 
-    setProdutos((atuais) => atuais.map((produto) => {
-      const quantidade = totais[produto.id] ?? 0;
-      if (quantidade === 0) return produto;
-      return { ...produto, currentStock: produto.currentStock - quantidade };
-    }));
-    setHistoricoSaidas((atuais) => [...novasSaidas, ...atuais]);
+    setProdutos(produtosAtualizados);
+    setHistoricoMovimentacoes((atuais) => [...movimentacoes, ...atuais]);
     setItensCompraOcultos((atuais) => {
       const proximos = new Set(atuais);
       Object.keys(totais).forEach((id) => proximos.delete(id));
@@ -166,7 +142,7 @@ function DashboardTeste({ onLogout }: { onLogout: () => void }) {
     setSelectedProductId("");
     setTermoBusca("");
     setQuantity("1");
-    setMessage(`${novasSaidas.length} ${novasSaidas.length === 1 ? "saída confirmada" : "saídas confirmadas"}.`);
+    setMessage(`${movimentacoes.length} ${movimentacoes.length === 1 ? "saída confirmada" : "saídas confirmadas"}.`);
   }
 
   function generateWeeklyList() {
@@ -217,7 +193,8 @@ function DashboardTeste({ onLogout }: { onLogout: () => void }) {
       setMessage("Este fornecedor não possui telefone ou itens na lista.");
       return;
     }
-    window.open(criarUrlWhatsApp(fornecedor.phone, criarMensagemPedido(itens)), "_blank");
+    const pedido = montarPedidoFornecedor(fornecedor, itens);
+    abrirPedidoWhatsApp(pedido.fornecedor, pedido.itens);
     setMessage(`WhatsApp aberto para ${fornecedor.name}.`);
   }
 
@@ -307,11 +284,9 @@ function DashboardTeste({ onLogout }: { onLogout: () => void }) {
   }
 
   function registerInvoiceEntry(produtoId: string, quantidade: number) {
-    const produto = produtos.find((item) => item.id === produtoId);
-    if (!produto) return;
-    setProdutos((atuais) => atuais.map((item) =>
-      item.id === produtoId ? { ...item, currentStock: item.currentStock + quantidade } : item,
-    ));
+    const { produto, produtosAtualizados, movimentacao } = registrarEntradaEstoque(produtos, produtoId, quantidade);
+    setProdutos(produtosAtualizados);
+    setHistoricoMovimentacoes((atuais) => [movimentacao, ...atuais]);
     setItensCompraOcultos((atuais) => {
       const proximos = new Set(atuais);
       proximos.delete(produtoId);
@@ -432,7 +407,7 @@ function DashboardTeste({ onLogout }: { onLogout: () => void }) {
                   <button type="button" disabled>Gravar vídeo do estoque</button>
                 </div>
               </section>
-              <HistoricoSaidas historicoSaidas={historicoSaidas} />
+              <HistoricoSaidas movimentacoes={historicoMovimentacoes} />
             </>
           ) : activePage === "entradas" ? (
             <EntradasPage
