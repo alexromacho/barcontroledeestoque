@@ -3,9 +3,18 @@ import { Menu } from "lucide-react";
 type DashboardHeaderProps = {
   currentDateTime: string;
   onOpenMenu: () => void;
+  eyebrow?: string;
+  title?: string;
+  subtitle?: string;
 };
 
-export function DashboardHeader({ currentDateTime, onOpenMenu }: DashboardHeaderProps) {
+export function DashboardHeader({
+  currentDateTime,
+  onOpenMenu,
+  eyebrow = "Sistema interno",
+  title = "Dashboard de Estoque",
+  subtitle = "Visão geral do estoque e controle de saídas",
+}: DashboardHeaderProps) {
   return (
     <header className="dashboard-header">
       <button className="mobile-menu-button" type="button" onClick={onOpenMenu} aria-label="Abrir menu">
@@ -13,9 +22,9 @@ export function DashboardHeader({ currentDateTime, onOpenMenu }: DashboardHeader
       </button>
 
       <div>
-        <span className="teste-eyebrow">Sistema interno</span>
-        <h1>Dashboard de Estoque</h1>
-        <p>Visão geral do estoque e controle de saídas</p>
+        <span className="teste-eyebrow">{eyebrow}</span>
+        <h1>{title}</h1>
+        <p>{subtitle}</p>
       </div>
 
       <time className="dashboard-clock" dateTime={new Date().toISOString()}>

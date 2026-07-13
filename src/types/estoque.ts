@@ -6,10 +6,15 @@ export type ProdutoEstoque = {
   unit: string;
   currentStock: number;
   minimumStock: number;
+  unitPrice?: number;
 };
 
-export type SaidaEstoque = {
+export type TipoMovimentacao = "entrada" | "saida";
+
+export type MovimentacaoEstoque = {
   id: string;
+  tipo: TipoMovimentacao;
+  date: string;
   time: string;
   productName: string;
   category: string;
@@ -19,6 +24,9 @@ export type SaidaEstoque = {
   currentStock: number;
   supplier: string;
 };
+
+// Alias temporário para consumidores que ainda usam o nome histórico de saída.
+export type SaidaEstoque = MovimentacaoEstoque;
 
 export type OrigemItemCompra = "automatico" | "manual";
 
@@ -40,4 +48,20 @@ export type Fornecedor = {
   phone: string;
   category: string;
   purchaseFrequency: string;
+};
+
+export type ListaSemanalRegistro = {
+  id: string;
+  createdAt: string;
+  date: string;
+  time: string;
+  fornecedores: Array<{
+    name: string;
+    itens: Array<{
+      name: string;
+      quantity: number;
+      unit: string;
+      unitPrice: number;
+    }>;
+  }>;
 };

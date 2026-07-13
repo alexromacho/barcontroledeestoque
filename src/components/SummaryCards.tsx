@@ -1,18 +1,20 @@
 import { ReactNode } from "react";
-import { AlertTriangle, Boxes, ClipboardList, PackageCheck } from "lucide-react";
+import { AlertTriangle, ArrowDownCircle, Boxes, ClipboardList, Truck } from "lucide-react";
 
 type SummaryCardsProps = {
   produtosCadastrados: number;
-  estoqueTotal: number;
   abaixoDoMinimo: number;
+  saidasHoje: number;
   itensParaComprar: number;
+  fornecedoresAtivos: number;
 };
 
 export function SummaryCards({
   produtosCadastrados,
-  estoqueTotal,
   abaixoDoMinimo,
+  saidasHoje,
   itensParaComprar,
+  fornecedoresAtivos,
 }: SummaryCardsProps) {
   return (
     <section className="teste-section-block" aria-labelledby="resumo-title">
@@ -22,9 +24,10 @@ export function SummaryCards({
       </div>
       <div className="teste-metrics dashboard-summary-grid" aria-label="Indicadores">
         <MetricCard icon={<Boxes />} label="Produtos cadastrados" value={produtosCadastrados.toString()} tone="good" />
-        <MetricCard icon={<PackageCheck />} label="Estoque total" value={estoqueTotal.toString()} tone="neutral" />
         <MetricCard icon={<AlertTriangle />} label="Abaixo do mínimo" value={abaixoDoMinimo.toString()} tone="danger" />
+        <MetricCard icon={<ArrowDownCircle />} label="Saídas registradas hoje" value={saidasHoje.toString()} tone="neutral" />
         <MetricCard icon={<ClipboardList />} label="Itens para comprar" value={itensParaComprar.toString()} tone="warning" />
+        <MetricCard icon={<Truck />} label="Fornecedores ativos" value={fornecedoresAtivos.toString()} tone="good" />
       </div>
     </section>
   );
