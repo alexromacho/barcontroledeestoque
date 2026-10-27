@@ -25,7 +25,7 @@ import "./styles.css";
 
 const produtoRepository = new ProdutoRepositorySupabase();
 
-function DashboardTeste({ onLogout }: { onLogout: () => void }) {
+function Dashboard({ onLogout }: { onLogout: () => void }) {
   const [produtos, setProdutos] = useState<ProdutoEstoque[]>([]);
   const [carregandoProdutos, setCarregandoProdutos] = useState(true);
   const [termoBusca, setTermoBusca] = useState("");
@@ -484,7 +484,7 @@ function App() {
 
   if (session === undefined) return <main className="auth-page"><p>Carregando...</p></main>;
   if (!session) return <LoginPage />;
-  return <DashboardTeste onLogout={() => supabase.auth.signOut()} />;
+  return <Dashboard onLogout={() => supabase.auth.signOut()} />;
 }
 
 createRoot(document.getElementById("root")!).render(<App />);
