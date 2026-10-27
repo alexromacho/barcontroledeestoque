@@ -8,6 +8,7 @@ import { FornecedoresPage } from "./components/FornecedoresPage";
 import { HistoricoSaidas } from "./components/HistoricoSaidas";
 import { ListaCompraAutomatica } from "./components/ListaCompraAutomatica";
 import { LoginPage } from "./components/LoginPage";
+import { ResetPasswordPage } from "./components/ResetPasswordPage";
 import { SaidaDoDia, SaidaPendente } from "./components/SaidaDoDia";
 import { Sidebar } from "./components/Sidebar";
 import { SummaryCards } from "./components/SummaryCards";
@@ -550,14 +551,19 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
 
 function App() {
   const [session, setSession] = useState<Session | null | undefined>(undefined);
+  const [recuperandoSenha, setRecuperandoSenha] = useState(false);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => setSession(data.session));
-    const { data } = supabase.auth.onAuthStateChange((_event, nextSession) => setSession(nextSession));
+    const { data } = supabase.auth.onAuthStateChange((event, nextSession) => {
+      if (event === "PASSWORD_RECOVERY") setRecuperandoSenha(true);
+      setSession(nextSession);
+    });
     return () => data.subscription.unsubscribe();
   }, []);
 
   if (session === undefined) return <main className="auth-page"><p>Carregando...</p></main>;
+  if (recuperandoSenha) return <ResetPasswordPage onConcluido={() => setRecuperandoSenha(false)} />;
   if (!session) return <LoginPage />;
   return <Dashboard onLogout={() => supabase.auth.signOut()} />;
 }

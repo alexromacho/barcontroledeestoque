@@ -952,6 +952,13 @@ a {
   backdrop-filter: blur(18px);
 }
 
+.auth-card-standalone {
+  position: relative;
+  top: auto;
+  right: auto;
+  margin: clamp(90px, 20vh, 180px) auto 0;
+}
+
 .auth-card > span {
   color: #d8ae65;
   font-size: .67rem;
@@ -1016,6 +1023,17 @@ a {
 
 .auth-card button:disabled { opacity: .6; }
 .auth-error { border-radius: 10px; padding: 10px 12px; color: #8f1d17; background: #fff0ef; font-weight: 750; }
+.auth-info { border-radius: 10px; padding: 10px 12px; color: #1d5c3f; background: #eefcf4; font-weight: 750; }
+.auth-forgot-link {
+  margin-top: 14px;
+  border: 0;
+  background: none;
+  color: #8a6a2f;
+  font-weight: 700;
+  text-decoration: underline;
+  cursor: pointer;
+  align-self: center;
+}
 
 @media (max-width: 900px) {
   .auth-page { padding-top: 24px; }
