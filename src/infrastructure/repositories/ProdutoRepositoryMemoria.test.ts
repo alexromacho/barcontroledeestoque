@@ -43,4 +43,28 @@ describe("ProdutoRepositoryMemoria", () => {
     listado.currentStock = 999;
     await expect(repositorio.buscarPorId("agua")).resolves.toMatchObject({ currentStock: 5 });
   });
+
+  it("cria um novo produto com id gerado", async () => {
+    const repositorio = new ProdutoRepositoryMemoria(produtos);
+    const criado = await repositorio.criar({
+      name: "Guardanapo",
+      category: "Descartáveis",
+      supplier: "Fornecedor B",
+      unit: "pacotes",
+      currentStock: 2,
+      minimumStock: 1,
+    });
+
+    expect(criado.id).toBeTruthy();
+    await expect(repositorio.listar()).resolves.toHaveLength(3);
+  });
+
+  it("exclui um produto existente", async () => {
+    const repositorio = new ProdutoRepositoryMemoria(produtos);
+    await repositorio.excluir("copo");
+
+    const resultado = await repositorio.listar();
+    expect(resultado).toHaveLength(1);
+    expect(resultado.find((produto) => produto.id === "copo")).toBeUndefined();
+  });
 });

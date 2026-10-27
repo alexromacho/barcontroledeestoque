@@ -16,15 +16,18 @@ import { montarPedidoFornecedor } from "./application/useCases/MontarPedidoForne
 import { registrarEntradaEstoque } from "./application/useCases/RegistrarEntradaEstoque";
 import { registrarSaidasEstoque, validarSaidaPendente } from "./application/useCases/RegistrarSaidaEstoque";
 import { fornecedores } from "./data/fornecedores";
-import { produtosEstoque } from "./data/produtos";
+import { ProdutoRepositorySupabase } from "./infrastructure/repositories/ProdutoRepositorySupabase";
 import { Fornecedor, ItemCompra, ItemCompraManual, ListaSemanalRegistro, MovimentacaoEstoque, ProdutoEstoque } from "./types/estoque";
 import { normalizarTexto } from "./utils/normalizarTexto";
 import { abrirPedidoWhatsApp } from "./infrastructure/services/WhatsAppService";
 import { supabase } from "./lib/supabase";
 import "./styles.css";
 
+const produtoRepository = new ProdutoRepositorySupabase();
+
 function DashboardTeste({ onLogout }: { onLogout: () => void }) {
-  const [produtos, setProdutos] = useState<ProdutoEstoque[]>(produtosEstoque);
+  const [produtos, setProdutos] = useState<ProdutoEstoque[]>([]);
+  const [carregandoProdutos, setCarregandoProdutos] = useState(true);
   const [termoBusca, setTermoBusca] = useState("");
   const [selectedProductId, setSelectedProductId] = useState("");
   const [quantity, setQuantity] = useState("1");
@@ -54,6 +57,14 @@ function DashboardTeste({ onLogout }: { onLogout: () => void }) {
     }, 30_000);
 
     return () => window.clearInterval(interval);
+  }, []);
+
+  useEffect(() => {
+    produtoRepository
+      .listar()
+      .then(setProdutos)
+      .catch((error) => setMessage(error instanceof Error ? error.message : "Não foi possível carregar os produtos."))
+      .finally(() => setCarregandoProdutos(false));
   }, []);
 
   const produtosFiltrados = useMemo(() => {
@@ -143,6 +154,14 @@ function DashboardTeste({ onLogout }: { onLogout: () => void }) {
     setTermoBusca("");
     setQuantity("1");
     setMessage(`${movimentacoes.length} ${movimentacoes.length === 1 ? "saída confirmada" : "saídas confirmadas"}.`);
+
+    Object.keys(totais).forEach((produtoId) => {
+      const produtoAtualizado = produtosAtualizados.find((item) => item.id === produtoId);
+      if (!produtoAtualizado) return;
+      produtoRepository.atualizar(produtoAtualizado).catch((error) =>
+        setMessage(error instanceof Error ? error.message : "Não foi possível salvar a saída de estoque."),
+      );
+    });
   }
 
   function generateWeeklyList() {
@@ -278,13 +297,18 @@ function DashboardTeste({ onLogout }: { onLogout: () => void }) {
     setMessage("Item manual removido da lista de compra.");
   }
 
-  function addSupplierProduct(produto: ProdutoEstoque) {
-    setProdutos((atuais) => [...atuais, produto]);
-    setMessage(`${produto.name}: item adicionado a ${produto.supplier}.`);
+  async function addSupplierProduct(produto: ProdutoEstoque) {
+    try {
+      const produtoCriado = await produtoRepository.criar(produto);
+      setProdutos((atuais) => [...atuais, produtoCriado]);
+      setMessage(`${produtoCriado.name}: item adicionado a ${produtoCriado.supplier}.`);
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "Não foi possível adicionar o produto.");
+    }
   }
 
   function registerInvoiceEntry(produtoId: string, quantidade: number) {
-    const { produto, produtosAtualizados, movimentacao } = registrarEntradaEstoque(produtos, produtoId, quantidade);
+    const { produto, produtoAtualizado, produtosAtualizados, movimentacao } = registrarEntradaEstoque(produtos, produtoId, quantidade);
     setProdutos(produtosAtualizados);
     setHistoricoMovimentacoes((atuais) => [movimentacao, ...atuais]);
     setItensCompraOcultos((atuais) => {
@@ -293,6 +317,9 @@ function DashboardTeste({ onLogout }: { onLogout: () => void }) {
       return proximos;
     });
     setMessage(`${produto.name}: entrada de ${quantidade} ${produto.unit} registrada pela nota fiscal.`);
+    produtoRepository.atualizar(produtoAtualizado).catch((error) =>
+      setMessage(error instanceof Error ? error.message : "Não foi possível salvar a entrada de estoque."),
+    );
   }
 
   function deleteSupplierProduct(produto: ProdutoEstoque) {
@@ -300,20 +327,31 @@ function DashboardTeste({ onLogout }: { onLogout: () => void }) {
     setProdutos((atuais) => atuais.filter((item) => item.id !== produto.id));
     setItensCompraManual((atuais) => atuais.filter((item) => item.produtoId !== produto.id));
     setMessage(`${produto.name}: item excluído.`);
+    produtoRepository.excluir(produto.id).catch((error) =>
+      setMessage(error instanceof Error ? error.message : "Não foi possível excluir o produto no servidor."),
+    );
   }
 
   function renameSupplierProduct(produto: ProdutoEstoque, novoNome: string) {
-    setProdutos((atuais) => atuais.map((item) =>
-      item.id === produto.id ? { ...item, name: novoNome } : item,
-    ));
+    const produtoAtualizado = { ...produto, name: novoNome };
+    setProdutos((atuais) => atuais.map((item) => (item.id === produto.id ? produtoAtualizado : item)));
     setMessage(`${produto.name} foi renomeado para ${novoNome}.`);
+    produtoRepository.atualizar(produtoAtualizado).catch((error) =>
+      setMessage(error instanceof Error ? error.message : "Não foi possível salvar o novo nome."),
+    );
   }
 
   function updateSupplierProductPrice(produto: ProdutoEstoque, valor: number) {
-    setProdutos((atuais) => atuais.map((item) =>
-      item.id === produto.id ? { ...item, unitPrice: valor } : item,
-    ));
+    const produtoAtualizado = { ...produto, unitPrice: valor };
+    setProdutos((atuais) => atuais.map((item) => (item.id === produto.id ? produtoAtualizado : item)));
     setMessage(`${produto.name}: valor atualizado para R$ ${valor.toFixed(2).replace(".", ",")}.`);
+    produtoRepository.atualizar(produtoAtualizado).catch((error) =>
+      setMessage(error instanceof Error ? error.message : "Não foi possível salvar o novo valor."),
+    );
+  }
+
+  if (carregandoProdutos) {
+    return <main className="auth-page"><p>Carregando estoque...</p></main>;
   }
 
   return (

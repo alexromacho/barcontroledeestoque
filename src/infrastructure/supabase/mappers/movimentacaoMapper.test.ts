@@ -3,29 +3,29 @@ import type { MovimentacaoEstoque } from "../../../domain/entities/MovimentacaoE
 import type { MovimentacaoComRelacoesRow } from "../database.types";
 import { mapMovimentacaoDomainToInsert, mapMovimentacaoRowToDomain } from "./movimentacaoMapper";
 
+const createdAt = "2026-07-12T21:30:00Z";
+const dataCriada = new Date(createdAt);
+
 const row: MovimentacaoComRelacoesRow = {
-  id: "mov-1",
-  produto_id: "agua-sem-gas",
-  fornecedor_id: "caio-aragua",
-  tipo: "entrada",
-  quantidade: 3,
-  unidade: "fardos",
-  estoque_anterior: 5,
-  estoque_atual: 8,
-  data_movimentacao: "12/07/2026",
-  horario_movimentacao: "18:30",
-  created_at: "2026-07-12T21:30:00Z",
-  produtos: { nome: "Água sem gás", categoria: "Água" },
-  fornecedores: { nome: "Caio Aragua" },
+  id: "9f1b7e2a-3333-4a11-8a11-000000000003",
+  product_id: "9f1b7e2a-1111-4a11-8a11-000000000001",
+  movement_type: "entrada",
+  quantity: 3,
+  previous_stock: 5,
+  current_stock: 8,
+  note: "",
+  invoice_image_path: null,
+  created_at: createdAt,
+  products: { name: "Água sem gás", category: "Água", unit: "fardos", suppliers: { name: "Caio Aragua" } },
 };
 
 describe("movimentacaoMapper", () => {
   it("converte uma movimentação persistida para o domínio", () => {
     expect(mapMovimentacaoRowToDomain(row)).toEqual({
-      id: "mov-1",
+      id: row.id,
       tipo: "entrada",
-      date: "12/07/2026",
-      time: "18:30",
+      date: dataCriada.toLocaleDateString("pt-BR"),
+      time: dataCriada.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }),
       productName: "Água sem gás",
       category: "Água",
       quantity: 3,
@@ -36,19 +36,28 @@ describe("movimentacaoMapper", () => {
     });
   });
 
-  it("converte o domínio para inserção sem espalhar snake_case", () => {
+  it("converte o domínio para inserção associada ao produto", () => {
     const movimentacao: MovimentacaoEstoque = mapMovimentacaoRowToDomain(row);
-    expect(mapMovimentacaoDomainToInsert(movimentacao, "agua-sem-gas", "caio-aragua")).toEqual({
-      id: "mov-1",
-      produto_id: "agua-sem-gas",
-      fornecedor_id: "caio-aragua",
-      tipo: "entrada",
-      quantidade: 3,
-      unidade: "fardos",
-      estoque_anterior: 5,
-      estoque_atual: 8,
-      data_movimentacao: "12/07/2026",
-      horario_movimentacao: "18:30",
+    expect(mapMovimentacaoDomainToInsert(movimentacao, row.product_id)).toEqual({
+      product_id: row.product_id,
+      movement_type: "entrada",
+      quantity: 3,
+      previous_stock: 5,
+      current_stock: 8,
+      note: "",
+      invoice_image_path: null,
     });
+  });
+
+  it("falha claramente quando o tipo 'ajuste' ainda não suportado é retornado", () => {
+    expect(() => mapMovimentacaoRowToDomain({ ...row, movement_type: "ajuste" })).toThrow(
+      `Movimentação ${row.id}: tipo "ajuste" ainda não é suportado no domínio.`,
+    );
+  });
+
+  it("falha claramente quando as relações não foram retornadas", () => {
+    expect(() => mapMovimentacaoRowToDomain({ ...row, products: null })).toThrow(
+      `Relações não encontradas para a movimentação ${row.id}.`,
+    );
   });
 });

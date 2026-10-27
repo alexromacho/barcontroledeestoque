@@ -1,100 +1,88 @@
 export type Database = {
   public: {
     Tables: {
-      fornecedores: {
+      suppliers: {
         Row: {
           id: string;
-          nome: string;
-          telefone: string;
-          categoria: string;
-          frequencia_compra: string;
-          ativo: boolean;
+          name: string;
+          phone: string;
+          category: string;
+          purchase_frequency: string;
           created_at: string;
           updated_at: string;
         };
         Insert: {
-          id: string;
-          nome: string;
-          telefone: string;
-          categoria: string;
-          frequencia_compra: string;
-          ativo?: boolean;
+          id?: string;
+          name: string;
+          phone?: string;
+          category?: string;
+          purchase_frequency?: string;
           created_at?: string;
           updated_at?: string;
         };
-        Update: Partial<Database["public"]["Tables"]["fornecedores"]["Insert"]>;
+        Update: Partial<Database["public"]["Tables"]["suppliers"]["Insert"]>;
         Relationships: [];
       };
-      produtos: {
+      products: {
         Row: {
           id: string;
-          fornecedor_id: string;
-          nome: string;
-          categoria: string;
-          unidade: string;
-          estoque_atual: number;
-          estoque_minimo: number;
-          valor_unitario: number;
-          ativo: boolean;
+          supplier_id: string;
+          name: string;
+          category: string;
+          unit: string;
+          current_stock: number;
+          minimum_stock: number;
+          unit_price: number;
+          active: boolean;
           created_at: string;
           updated_at: string;
         };
         Insert: {
-          id: string;
-          fornecedor_id: string;
-          nome: string;
-          categoria: string;
-          unidade: string;
-          estoque_atual?: number;
-          estoque_minimo?: number;
-          valor_unitario?: number;
-          ativo?: boolean;
+          id?: string;
+          supplier_id: string;
+          name: string;
+          category?: string;
+          unit?: string;
+          current_stock?: number;
+          minimum_stock?: number;
+          unit_price?: number;
+          active?: boolean;
           created_at?: string;
           updated_at?: string;
         };
-        Update: Partial<Database["public"]["Tables"]["produtos"]["Insert"]>;
+        Update: Partial<Database["public"]["Tables"]["products"]["Insert"]>;
         Relationships: [{
-          foreignKeyName: "produtos_fornecedor_id_fkey";
-          columns: ["fornecedor_id"];
+          foreignKeyName: "products_supplier_id_fkey";
+          columns: ["supplier_id"];
           isOneToOne: false;
-          referencedRelation: "fornecedores";
+          referencedRelation: "suppliers";
           referencedColumns: ["id"];
         }];
       };
-      movimentacoes_estoque: {
+      stock_movements: {
         Row: {
           id: string;
-          produto_id: string;
-          fornecedor_id: string;
-          tipo: "entrada" | "saida";
-          quantidade: number;
-          unidade: string;
-          estoque_anterior: number;
-          estoque_atual: number;
-          data_movimentacao: string;
-          horario_movimentacao: string;
+          product_id: string;
+          movement_type: "entrada" | "saida" | "ajuste";
+          quantity: number;
+          previous_stock: number;
+          current_stock: number;
+          note: string;
+          invoice_image_path: string | null;
           created_at: string;
         };
-        Insert: Omit<Database["public"]["Tables"]["movimentacoes_estoque"]["Row"], "created_at"> & {
+        Insert: Omit<Database["public"]["Tables"]["stock_movements"]["Row"], "id" | "created_at"> & {
+          id?: string;
           created_at?: string;
         };
         Update: never;
-        Relationships: [
-          {
-            foreignKeyName: "movimentacoes_estoque_produto_id_fkey";
-            columns: ["produto_id"];
-            isOneToOne: false;
-            referencedRelation: "produtos";
-            referencedColumns: ["id"];
-          },
-          {
-            foreignKeyName: "movimentacoes_estoque_fornecedor_id_fkey";
-            columns: ["fornecedor_id"];
-            isOneToOne: false;
-            referencedRelation: "fornecedores";
-            referencedColumns: ["id"];
-          },
-        ];
+        Relationships: [{
+          foreignKeyName: "stock_movements_product_id_fkey";
+          columns: ["product_id"];
+          isOneToOne: false;
+          referencedRelation: "products";
+          referencedColumns: ["id"];
+        }];
       };
     };
     Views: Record<string, never>;
@@ -104,17 +92,19 @@ export type Database = {
   };
 };
 
-export type FornecedorRow = Database["public"]["Tables"]["fornecedores"]["Row"];
-export type ProdutoRow = Database["public"]["Tables"]["produtos"]["Row"];
-export type ProdutoUpdate = Database["public"]["Tables"]["produtos"]["Update"];
-export type MovimentacaoRow = Database["public"]["Tables"]["movimentacoes_estoque"]["Row"];
-export type MovimentacaoInsert = Database["public"]["Tables"]["movimentacoes_estoque"]["Insert"];
+export type SupplierRow = Database["public"]["Tables"]["suppliers"]["Row"];
+export type ProdutoRow = Database["public"]["Tables"]["products"]["Row"];
+export type ProdutoInsert = Database["public"]["Tables"]["products"]["Insert"];
+export type ProdutoUpdate = Database["public"]["Tables"]["products"]["Update"];
+export type MovimentacaoRow = Database["public"]["Tables"]["stock_movements"]["Row"];
+export type MovimentacaoInsert = Database["public"]["Tables"]["stock_movements"]["Insert"];
 
 export type ProdutoComFornecedorRow = ProdutoRow & {
-  fornecedores: Pick<FornecedorRow, "nome"> | null;
+  suppliers: Pick<SupplierRow, "name"> | null;
 };
 
 export type MovimentacaoComRelacoesRow = MovimentacaoRow & {
-  produtos: Pick<ProdutoRow, "nome" | "categoria"> | null;
-  fornecedores: Pick<FornecedorRow, "nome"> | null;
+  products: (Pick<ProdutoRow, "name" | "category" | "unit"> & {
+    suppliers: Pick<SupplierRow, "name"> | null;
+  }) | null;
 };

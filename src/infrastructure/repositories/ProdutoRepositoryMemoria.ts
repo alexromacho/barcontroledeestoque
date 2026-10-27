@@ -17,9 +17,19 @@ export class ProdutoRepositoryMemoria implements ProdutoRepository {
     return produto ? { ...produto } : null;
   }
 
+  async criar(produto: Omit<ProdutoEstoque, "id">) {
+    const novoProduto: ProdutoEstoque = { ...produto, id: crypto.randomUUID() };
+    this.produtos = [...this.produtos, novoProduto];
+    return { ...novoProduto };
+  }
+
   async atualizar(produtoAtualizado: ProdutoEstoque) {
     this.produtos = this.produtos.map((produto) =>
       produto.id === produtoAtualizado.id ? { ...produtoAtualizado } : produto,
     );
+  }
+
+  async excluir(id: string) {
+    this.produtos = this.produtos.filter((produto) => produto.id !== id);
   }
 }
