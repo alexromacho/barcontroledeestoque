@@ -1,26 +1,20 @@
-# Bar React TS
+# Bar Estoque
 
-Frontend em React + TypeScript para o sistema do bar.
+Frontend em React + TypeScript + Supabase para gestão de estoque do bar.
 
 ## Telas
 
-- Login
-- Cadastro de fornecedores
-- Cadastro de produtos
-- Tela de pedido com envio por WhatsApp
-- Estoque simples
+- Login (sessão via Supabase)
+- Fornecedores
+- Entradas de estoque
+- Saída do dia / histórico de saídas
+- Estoque de produtos
+- Lista de compra automática
+- Pedido ao fornecedor com envio por WhatsApp
 
-## API
+## Backend
 
-Por padrão o app usa a API no mesmo host, porta `8000`.
-
-Exemplo:
-
-```text
-http://localhost:8000
-```
-
-No iPhone, se o app abrir em `http://IP-DO-MAC:5174`, ele tentará acessar a API em `http://IP-DO-MAC:8000`.
+Usa Supabase como backend (ver `supabase/`). Configure as credenciais em `.env.local` (veja `.env.example`).
 
 ## Rodar
 
