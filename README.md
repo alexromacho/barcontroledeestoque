@@ -2,6 +2,8 @@
 
 Frontend em React + TypeScript + Supabase para gestão de estoque do bar.
 
+**Produção:** https://bar-estoque-seven.vercel.app (deploy automático a cada push na `main`)
+
 ## Telas
 
 - Login (sessão via Supabase)
