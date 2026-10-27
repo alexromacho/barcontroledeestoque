@@ -1,5 +1,5 @@
 import { FormEvent, useState } from "react";
-import { ChevronDown, ChevronUp, PackagePlus, Pencil, Trash2, Truck } from "lucide-react";
+import { ChevronDown, ChevronUp, PackagePlus, Pencil, Plus, Trash2, Truck } from "lucide-react";
 import { Fornecedor, ListaSemanalRegistro, ProdutoEstoque } from "../types/estoque";
 import { normalizarTexto } from "../utils/normalizarTexto";
 import { DashboardHeader } from "./DashboardHeader";
@@ -14,6 +14,23 @@ type FornecedoresPageProps = {
   onRenameProduct: (produto: ProdutoEstoque, novoNome: string) => void;
   onUpdatePrice: (produto: ProdutoEstoque, valor: number) => void;
   onDeleteProduct: (produto: ProdutoEstoque) => void;
+  onAddFornecedor: (fornecedor: Fornecedor) => void;
+  onUpdateFornecedor: (nomeAtual: string, fornecedor: Fornecedor) => void;
+  onDeleteFornecedor: (nome: string) => void;
+};
+
+type NovoFornecedor = {
+  name: string;
+  phone: string;
+  category: string;
+  purchaseFrequency: string;
+};
+
+const fornecedorVazio: NovoFornecedor = {
+  name: "",
+  phone: "",
+  category: "",
+  purchaseFrequency: "Sob demanda",
 };
 
 type NovoProduto = {
@@ -75,6 +92,9 @@ export function FornecedoresPage({
   onRenameProduct,
   onUpdatePrice,
   onDeleteProduct,
+  onAddFornecedor,
+  onUpdateFornecedor,
+  onDeleteFornecedor,
 }: FornecedoresPageProps) {
   const [formularios, setFormularios] = useState<Record<string, NovoProduto>>({});
   const [aberto, setAberto] = useState<string | null>(null);
@@ -83,6 +103,8 @@ export function FornecedoresPage({
   const [fornecedoresRetraidos, setFornecedoresRetraidos] = useState<Set<string>>(
     () => new Set(fornecedores.map((fornecedor) => fornecedor.name)),
   );
+  const [novoFornecedorAberto, setNovoFornecedorAberto] = useState(false);
+  const [novoFornecedor, setNovoFornecedor] = useState<NovoFornecedor>(fornecedorVazio);
   const mesAtual = new Date().toISOString().slice(0, 7);
   const formatarValor = (valor: number) => valor.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 
@@ -233,6 +255,49 @@ export function FornecedoresPage({
     });
   }
 
+  function adicionarFornecedor(event: FormEvent) {
+    event.preventDefault();
+    if (!novoFornecedor.name.trim()) return;
+    if (fornecedores.some((fornecedor) => normalizarTexto(fornecedor.name) === normalizarTexto(novoFornecedor.name))) {
+      window.alert("Já existe um fornecedor com esse nome.");
+      return;
+    }
+
+    onAddFornecedor({
+      name: novoFornecedor.name.trim(),
+      phone: novoFornecedor.phone.trim(),
+      category: novoFornecedor.category.trim(),
+      purchaseFrequency: novoFornecedor.purchaseFrequency.trim() || "Sob demanda",
+    });
+    setNovoFornecedor(fornecedorVazio);
+    setNovoFornecedorAberto(false);
+  }
+
+  function editarFornecedor(fornecedor: Fornecedor) {
+    const telefone = window.prompt("Telefone (WhatsApp, com DDI e DDD)", fornecedor.phone);
+    if (telefone === null) return;
+    const categoria = window.prompt("Categoria", fornecedor.category);
+    if (categoria === null) return;
+    const frequencia = window.prompt("Frequência de compra", fornecedor.purchaseFrequency);
+    if (frequencia === null) return;
+
+    onUpdateFornecedor(fornecedor.name, {
+      name: fornecedor.name,
+      phone: telefone.trim(),
+      category: categoria.trim(),
+      purchaseFrequency: frequencia.trim() || fornecedor.purchaseFrequency,
+    });
+  }
+
+  function excluirFornecedor(fornecedor: Fornecedor, quantidadeItens: number) {
+    if (quantidadeItens > 0) {
+      window.alert(`Não é possível excluir ${fornecedor.name}: ainda há ${quantidadeItens} item(ns) cadastrado(s) para ele.`);
+      return;
+    }
+    if (!window.confirm(`Excluir o fornecedor ${fornecedor.name}?`)) return;
+    onDeleteFornecedor(fornecedor.name);
+  }
+
   return (
     <>
       <DashboardHeader
@@ -242,6 +307,23 @@ export function FornecedoresPage({
         subtitle="Gerencie os itens fornecidos por cada parceiro"
         onOpenMenu={onOpenMenu}
       />
+
+      <section className="teste-panel fornecedor-card" aria-label="Cadastrar fornecedor">
+        <button className="fornecedor-add-trigger" type="button" onClick={() => setNovoFornecedorAberto((atual) => !atual)}>
+          <Plus size={18} />
+          {novoFornecedorAberto ? "Cancelar" : "Novo fornecedor"}
+        </button>
+
+        {novoFornecedorAberto && (
+          <form className="fornecedor-add-form" onSubmit={adicionarFornecedor}>
+            <label>Nome<input required value={novoFornecedor.name} onChange={(event) => setNovoFornecedor((atual) => ({ ...atual, name: event.target.value }))} /></label>
+            <label>Telefone (WhatsApp)<input value={novoFornecedor.phone} onChange={(event) => setNovoFornecedor((atual) => ({ ...atual, phone: event.target.value }))} /></label>
+            <label>Categoria<input value={novoFornecedor.category} onChange={(event) => setNovoFornecedor((atual) => ({ ...atual, category: event.target.value }))} /></label>
+            <label>Frequência de compra<input value={novoFornecedor.purchaseFrequency} onChange={(event) => setNovoFornecedor((atual) => ({ ...atual, purchaseFrequency: event.target.value }))} /></label>
+            <button type="submit">Salvar fornecedor</button>
+          </form>
+        )}
+      </section>
 
       <section className="fornecedores-lista" aria-label="Lista de fornecedores">
         {fornecedores.map((fornecedor) => {
@@ -265,6 +347,12 @@ export function FornecedoresPage({
                 </div>
                 <div className="fornecedor-card-actions">
                   <span>{itens.length} {itens.length === 1 ? "item" : "itens"}</span>
+                  <button type="button" className="fornecedor-rename" onClick={() => editarFornecedor(fornecedor)} aria-label={`Editar ${fornecedor.name}`}>
+                    <Pencil size={17} /> Editar
+                  </button>
+                  <button type="button" className="fornecedor-delete" onClick={() => excluirFornecedor(fornecedor, itens.length)} aria-label={`Excluir ${fornecedor.name}`}>
+                    <Trash2 size={17} /> Excluir
+                  </button>
                   <button className="fornecedor-toggle" type="button" onClick={() => alternarFornecedor(fornecedor.name)} aria-expanded={!retraido}>
                     {retraido ? <ChevronDown size={21} /> : <ChevronUp size={21} />}
                     {retraido ? "Expandir" : "Retrair"}

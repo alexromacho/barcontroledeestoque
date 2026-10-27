@@ -361,6 +361,32 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
     );
   }
 
+  async function addFornecedor(fornecedor: Fornecedor) {
+    try {
+      const fornecedorCriado = await fornecedorRepository.criar(fornecedor);
+      setFornecedores((atuais) => [...atuais, fornecedorCriado]);
+      setMessage(`${fornecedorCriado.name}: fornecedor cadastrado.`);
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "Não foi possível cadastrar o fornecedor.");
+    }
+  }
+
+  function updateFornecedor(nomeAtual: string, fornecedorAtualizado: Fornecedor) {
+    setFornecedores((atuais) => atuais.map((item) => (item.name === nomeAtual ? fornecedorAtualizado : item)));
+    setMessage(`${fornecedorAtualizado.name}: dados atualizados.`);
+    fornecedorRepository.atualizar(nomeAtual, fornecedorAtualizado).catch((error) =>
+      setMessage(error instanceof Error ? error.message : "Não foi possível salvar as alterações do fornecedor."),
+    );
+  }
+
+  function deleteFornecedor(nome: string) {
+    setFornecedores((atuais) => atuais.filter((item) => item.name !== nome));
+    setMessage(`${nome}: fornecedor excluído.`);
+    fornecedorRepository.excluir(nome).catch((error) =>
+      setMessage(error instanceof Error ? error.message : "Não foi possível excluir o fornecedor no servidor."),
+    );
+  }
+
   if (carregandoProdutos || carregandoFornecedores) {
     return <main className="auth-page"><p>Carregando estoque...</p></main>;
   }
@@ -476,6 +502,9 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
               onRenameProduct={renameSupplierProduct}
               onUpdatePrice={updateSupplierProductPrice}
               onDeleteProduct={deleteSupplierProduct}
+              onAddFornecedor={addFornecedor}
+              onUpdateFornecedor={updateFornecedor}
+              onDeleteFornecedor={deleteFornecedor}
             />
           )}
         </div>
