@@ -59,6 +59,62 @@ export type Database = {
           referencedColumns: ["id"];
         }];
       };
+      weekly_lists: {
+        Row: {
+          id: string;
+          title: string;
+          total_amount: number;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          title?: string;
+          total_amount?: number;
+          created_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["weekly_lists"]["Insert"]>;
+        Relationships: [];
+      };
+      weekly_list_items: {
+        Row: {
+          id: string;
+          weekly_list_id: string;
+          supplier_id: string;
+          product_id: string | null;
+          product_name: string;
+          quantity: number;
+          unit: string;
+          unit_price: number;
+          total_amount: number;
+        };
+        Insert: {
+          id?: string;
+          weekly_list_id: string;
+          supplier_id: string;
+          product_id?: string | null;
+          product_name: string;
+          quantity: number;
+          unit: string;
+          unit_price?: number;
+        };
+        Update: never;
+        Relationships: [
+          {
+            foreignKeyName: "weekly_list_items_weekly_list_id_fkey";
+            columns: ["weekly_list_id"];
+            isOneToOne: false;
+            referencedRelation: "weekly_lists";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "weekly_list_items_supplier_id_fkey";
+            columns: ["supplier_id"];
+            isOneToOne: false;
+            referencedRelation: "suppliers";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       stock_movements: {
         Row: {
           id: string;
@@ -101,6 +157,11 @@ export type ProdutoUpdate = Database["public"]["Tables"]["products"]["Update"];
 export type MovimentacaoRow = Database["public"]["Tables"]["stock_movements"]["Row"];
 export type MovimentacaoInsert = Database["public"]["Tables"]["stock_movements"]["Insert"];
 
+export type WeeklyListRow = Database["public"]["Tables"]["weekly_lists"]["Row"];
+export type WeeklyListInsert = Database["public"]["Tables"]["weekly_lists"]["Insert"];
+export type WeeklyListItemRow = Database["public"]["Tables"]["weekly_list_items"]["Row"];
+export type WeeklyListItemInsert = Database["public"]["Tables"]["weekly_list_items"]["Insert"];
+
 export type ProdutoComFornecedorRow = ProdutoRow & {
   suppliers: Pick<SupplierRow, "name"> | null;
 };
@@ -109,4 +170,12 @@ export type MovimentacaoComRelacoesRow = MovimentacaoRow & {
   products: (Pick<ProdutoRow, "name" | "category" | "unit"> & {
     suppliers: Pick<SupplierRow, "name"> | null;
   }) | null;
+};
+
+export type WeeklyListComItensRow = WeeklyListRow & {
+  weekly_list_items: Array<
+    Pick<WeeklyListItemRow, "product_name" | "quantity" | "unit" | "unit_price"> & {
+      suppliers: Pick<SupplierRow, "name"> | null;
+    }
+  >;
 };

@@ -16,6 +16,7 @@ import { montarPedidoFornecedor } from "./application/useCases/MontarPedidoForne
 import { registrarEntradaEstoque } from "./application/useCases/RegistrarEntradaEstoque";
 import { registrarSaidasEstoque, validarSaidaPendente } from "./application/useCases/RegistrarSaidaEstoque";
 import { FornecedorRepositorySupabase } from "./infrastructure/repositories/FornecedorRepositorySupabase";
+import { ListaSemanalRepositorySupabase } from "./infrastructure/repositories/ListaSemanalRepositorySupabase";
 import { MovimentacaoRepositorySupabase } from "./infrastructure/repositories/MovimentacaoRepositorySupabase";
 import { ProdutoRepositorySupabase } from "./infrastructure/repositories/ProdutoRepositorySupabase";
 import { Fornecedor, ItemCompra, ItemCompraManual, ListaSemanalRegistro, MovimentacaoEstoque, ProdutoEstoque } from "./types/estoque";
@@ -27,6 +28,7 @@ import "./styles.css";
 const produtoRepository = new ProdutoRepositorySupabase();
 const fornecedorRepository = new FornecedorRepositorySupabase();
 const movimentacaoRepository = new MovimentacaoRepositorySupabase();
+const listaSemanalRepository = new ListaSemanalRepositorySupabase();
 
 function Dashboard({ onLogout }: { onLogout: () => void }) {
   const [produtos, setProdutos] = useState<ProdutoEstoque[]>([]);
@@ -42,6 +44,7 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
   const [itensCompraManual, setItensCompraManual] = useState<ItemCompraManual[]>([]);
   const [itensCompraOcultos, setItensCompraOcultos] = useState<Set<string>>(() => new Set());
   const [historicoListas, setHistoricoListas] = useState<ListaSemanalRegistro[]>([]);
+  const [carregandoHistoricoListas, setCarregandoHistoricoListas] = useState(true);
   const [message, setMessage] = useState("");
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [activePage, setActivePage] = useState<"dashboard" | "entradas" | "fornecedores">("dashboard");
@@ -87,6 +90,14 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
       .then(setHistoricoMovimentacoes)
       .catch((error) => setMessage(error instanceof Error ? error.message : "Não foi possível carregar o histórico de movimentações."))
       .finally(() => setCarregandoHistorico(false));
+  }, []);
+
+  useEffect(() => {
+    listaSemanalRepository
+      .listar()
+      .then(setHistoricoListas)
+      .catch((error) => setMessage(error instanceof Error ? error.message : "Não foi possível carregar o histórico de listas semanais."))
+      .finally(() => setCarregandoHistoricoListas(false));
   }, []);
 
   const produtosFiltrados = useMemo(() => {
@@ -207,13 +218,17 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
       return "";
     }
     const agora = new Date();
-    setHistoricoListas((atuais) => [{
+    const novoRegistro: ListaSemanalRegistro = {
       id: crypto.randomUUID(),
       createdAt: agora.toISOString(),
       date: agora.toLocaleDateString("pt-BR"),
       time: agora.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }),
       fornecedores: fornecedoresDaLista,
-    }, ...atuais]);
+    };
+    setHistoricoListas((atuais) => [novoRegistro, ...atuais]);
+    listaSemanalRepository.registrar(novoRegistro).catch((error) =>
+      setMessage(error instanceof Error ? error.message : "Não foi possível salvar a lista semanal."),
+    );
     const grupos = fornecedoresDaLista.map((fornecedor) => {
       const linhas = fornecedor.itens.map((item) => `- ${item.quantity} ${item.unit} de ${item.name} — R$ ${(item.quantity * item.unitPrice).toFixed(2).replace(".", ",")}`);
       return `${fornecedor.name}\n${linhas.join("\n")}`;
@@ -407,7 +422,7 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
     );
   }
 
-  if (carregandoProdutos || carregandoFornecedores || carregandoHistorico) {
+  if (carregandoProdutos || carregandoFornecedores || carregandoHistorico || carregandoHistoricoListas) {
     return <main className="auth-page"><p>Carregando estoque...</p></main>;
   }
 
