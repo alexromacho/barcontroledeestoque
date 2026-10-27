@@ -19,6 +19,7 @@ export function registrarEntradaEstoque(
   const produtosAtualizados = produtos.map((item) => item.id === produtoId ? produtoAtualizado : item);
   const movimentacao: SaidaEstoque = {
     id: `${data.getTime()}-${produto.id}-${gerarId()}`,
+    productId: produto.id,
     tipo: "entrada",
     date: data.toLocaleDateString("pt-BR"),
     time: data.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }),

@@ -22,6 +22,7 @@ export function registrarSaidasEstoque(
 
     movimentacoes.push({
       id: `${Date.now()}-${produto.id}-${gerarId()}`,
+      productId: produto.id,
       tipo: "saida",
       date: data.toLocaleDateString("pt-BR"),
       time: data.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }),

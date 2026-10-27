@@ -23,6 +23,7 @@ describe("movimentacaoMapper", () => {
   it("converte uma movimentação persistida para o domínio", () => {
     expect(mapMovimentacaoRowToDomain(row)).toEqual({
       id: row.id,
+      productId: row.product_id,
       tipo: "entrada",
       date: dataCriada.toLocaleDateString("pt-BR"),
       time: dataCriada.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }),
@@ -38,7 +39,7 @@ describe("movimentacaoMapper", () => {
 
   it("converte o domínio para inserção associada ao produto", () => {
     const movimentacao: MovimentacaoEstoque = mapMovimentacaoRowToDomain(row);
-    expect(mapMovimentacaoDomainToInsert(movimentacao, row.product_id)).toEqual({
+    expect(mapMovimentacaoDomainToInsert(movimentacao)).toEqual({
       product_id: row.product_id,
       movement_type: "entrada",
       quantity: 3,

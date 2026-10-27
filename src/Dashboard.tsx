@@ -16,6 +16,7 @@ import { montarPedidoFornecedor } from "./application/useCases/MontarPedidoForne
 import { registrarEntradaEstoque } from "./application/useCases/RegistrarEntradaEstoque";
 import { registrarSaidasEstoque, validarSaidaPendente } from "./application/useCases/RegistrarSaidaEstoque";
 import { FornecedorRepositorySupabase } from "./infrastructure/repositories/FornecedorRepositorySupabase";
+import { MovimentacaoRepositorySupabase } from "./infrastructure/repositories/MovimentacaoRepositorySupabase";
 import { ProdutoRepositorySupabase } from "./infrastructure/repositories/ProdutoRepositorySupabase";
 import { Fornecedor, ItemCompra, ItemCompraManual, ListaSemanalRegistro, MovimentacaoEstoque, ProdutoEstoque } from "./types/estoque";
 import { normalizarTexto } from "./utils/normalizarTexto";
@@ -25,6 +26,7 @@ import "./styles.css";
 
 const produtoRepository = new ProdutoRepositorySupabase();
 const fornecedorRepository = new FornecedorRepositorySupabase();
+const movimentacaoRepository = new MovimentacaoRepositorySupabase();
 
 function Dashboard({ onLogout }: { onLogout: () => void }) {
   const [produtos, setProdutos] = useState<ProdutoEstoque[]>([]);
@@ -35,6 +37,7 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
   const [selectedProductId, setSelectedProductId] = useState("");
   const [quantity, setQuantity] = useState("1");
   const [historicoMovimentacoes, setHistoricoMovimentacoes] = useState<MovimentacaoEstoque[]>([]);
+  const [carregandoHistorico, setCarregandoHistorico] = useState(true);
   const [saidasPendentes, setSaidasPendentes] = useState<SaidaPendente[]>([]);
   const [itensCompraManual, setItensCompraManual] = useState<ItemCompraManual[]>([]);
   const [itensCompraOcultos, setItensCompraOcultos] = useState<Set<string>>(() => new Set());
@@ -76,6 +79,14 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
       .then(setFornecedores)
       .catch((error) => setMessage(error instanceof Error ? error.message : "Não foi possível carregar os fornecedores."))
       .finally(() => setCarregandoFornecedores(false));
+  }, []);
+
+  useEffect(() => {
+    movimentacaoRepository
+      .listar()
+      .then(setHistoricoMovimentacoes)
+      .catch((error) => setMessage(error instanceof Error ? error.message : "Não foi possível carregar o histórico de movimentações."))
+      .finally(() => setCarregandoHistorico(false));
   }, []);
 
   const produtosFiltrados = useMemo(() => {
@@ -171,6 +182,12 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
       if (!produtoAtualizado) return;
       produtoRepository.atualizar(produtoAtualizado).catch((error) =>
         setMessage(error instanceof Error ? error.message : "Não foi possível salvar a saída de estoque."),
+      );
+    });
+
+    movimentacoes.forEach((movimentacao) => {
+      movimentacaoRepository.registrar(movimentacao).catch((error) =>
+        setMessage(error instanceof Error ? error.message : "Não foi possível salvar o histórico da saída."),
       );
     });
   }
@@ -331,6 +348,9 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
     produtoRepository.atualizar(produtoAtualizado).catch((error) =>
       setMessage(error instanceof Error ? error.message : "Não foi possível salvar a entrada de estoque."),
     );
+    movimentacaoRepository.registrar(movimentacao).catch((error) =>
+      setMessage(error instanceof Error ? error.message : "Não foi possível salvar o histórico da entrada."),
+    );
   }
 
   function deleteSupplierProduct(produto: ProdutoEstoque) {
@@ -387,7 +407,7 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
     );
   }
 
-  if (carregandoProdutos || carregandoFornecedores) {
+  if (carregandoProdutos || carregandoFornecedores || carregandoHistorico) {
     return <main className="auth-page"><p>Carregando estoque...</p></main>;
   }
 

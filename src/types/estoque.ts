@@ -13,6 +13,7 @@ export type TipoMovimentacao = "entrada" | "saida";
 
 export type MovimentacaoEstoque = {
   id: string;
+  productId: string;
   tipo: TipoMovimentacao;
   date: string;
   time: string;

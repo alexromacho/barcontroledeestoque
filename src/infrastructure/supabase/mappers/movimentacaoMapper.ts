@@ -13,6 +13,7 @@ export function mapMovimentacaoRowToDomain(row: MovimentacaoComRelacoesRow): Mov
 
   return {
     id: row.id,
+    productId: row.product_id,
     tipo: row.movement_type,
     date: data.toLocaleDateString("pt-BR"),
     time: data.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }),
@@ -26,12 +27,9 @@ export function mapMovimentacaoRowToDomain(row: MovimentacaoComRelacoesRow): Mov
   };
 }
 
-export function mapMovimentacaoDomainToInsert(
-  movimentacao: MovimentacaoEstoque,
-  produtoId: string,
-): MovimentacaoInsert {
+export function mapMovimentacaoDomainToInsert(movimentacao: MovimentacaoEstoque): MovimentacaoInsert {
   return {
-    product_id: produtoId,
+    product_id: movimentacao.productId,
     movement_type: movimentacao.tipo,
     quantity: movimentacao.quantity,
     previous_stock: movimentacao.previousStock,
