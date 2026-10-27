@@ -15,7 +15,7 @@ import { agruparListaCompraPorFornecedor, gerarListaCompra } from "./application
 import { montarPedidoFornecedor } from "./application/useCases/MontarPedidoFornecedor";
 import { registrarEntradaEstoque } from "./application/useCases/RegistrarEntradaEstoque";
 import { registrarSaidasEstoque, validarSaidaPendente } from "./application/useCases/RegistrarSaidaEstoque";
-import { fornecedores } from "./data/fornecedores";
+import { FornecedorRepositorySupabase } from "./infrastructure/repositories/FornecedorRepositorySupabase";
 import { ProdutoRepositorySupabase } from "./infrastructure/repositories/ProdutoRepositorySupabase";
 import { Fornecedor, ItemCompra, ItemCompraManual, ListaSemanalRegistro, MovimentacaoEstoque, ProdutoEstoque } from "./types/estoque";
 import { normalizarTexto } from "./utils/normalizarTexto";
@@ -24,10 +24,13 @@ import { supabase } from "./lib/supabase";
 import "./styles.css";
 
 const produtoRepository = new ProdutoRepositorySupabase();
+const fornecedorRepository = new FornecedorRepositorySupabase();
 
 function Dashboard({ onLogout }: { onLogout: () => void }) {
   const [produtos, setProdutos] = useState<ProdutoEstoque[]>([]);
   const [carregandoProdutos, setCarregandoProdutos] = useState(true);
+  const [fornecedores, setFornecedores] = useState<Fornecedor[]>([]);
+  const [carregandoFornecedores, setCarregandoFornecedores] = useState(true);
   const [termoBusca, setTermoBusca] = useState("");
   const [selectedProductId, setSelectedProductId] = useState("");
   const [quantity, setQuantity] = useState("1");
@@ -65,6 +68,14 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
       .then(setProdutos)
       .catch((error) => setMessage(error instanceof Error ? error.message : "Não foi possível carregar os produtos."))
       .finally(() => setCarregandoProdutos(false));
+  }, []);
+
+  useEffect(() => {
+    fornecedorRepository
+      .listar()
+      .then(setFornecedores)
+      .catch((error) => setMessage(error instanceof Error ? error.message : "Não foi possível carregar os fornecedores."))
+      .finally(() => setCarregandoFornecedores(false));
   }, []);
 
   const produtosFiltrados = useMemo(() => {
@@ -350,7 +361,7 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
     );
   }
 
-  if (carregandoProdutos) {
+  if (carregandoProdutos || carregandoFornecedores) {
     return <main className="auth-page"><p>Carregando estoque...</p></main>;
   }
 

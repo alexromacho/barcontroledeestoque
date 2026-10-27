@@ -93,6 +93,8 @@ export type Database = {
 };
 
 export type SupplierRow = Database["public"]["Tables"]["suppliers"]["Row"];
+export type SupplierInsert = Database["public"]["Tables"]["suppliers"]["Insert"];
+export type SupplierUpdate = Database["public"]["Tables"]["suppliers"]["Update"];
 export type ProdutoRow = Database["public"]["Tables"]["products"]["Row"];
 export type ProdutoInsert = Database["public"]["Tables"]["products"]["Insert"];
 export type ProdutoUpdate = Database["public"]["Tables"]["products"]["Update"];
