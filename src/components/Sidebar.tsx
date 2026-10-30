@@ -22,14 +22,14 @@ type SidebarProps = {
 
 const sidebarLinks = [
   { label: "Dashboard", icon: LayoutDashboard, page: "dashboard" as const },
-  { label: "Estoque", icon: Boxes },
-  { label: "Saídas", icon: LogOut },
+  { label: "Estoque", icon: Boxes, page: "dashboard" as const },
+  { label: "Saídas", icon: LogOut, page: "dashboard" as const },
   { label: "Entradas", icon: Inbox, page: "entradas" as const },
-  { label: "Histórico", icon: History },
-  { label: "Lista de Compra", icon: ShoppingBasket },
+  { label: "Histórico", icon: History, page: "dashboard" as const },
+  { label: "Lista de Compra", icon: ShoppingBasket, page: "dashboard" as const },
   { label: "Fornecedores", icon: Truck, page: "fornecedores" as const },
-  { label: "Relatórios", icon: BarChart3 },
-  { label: "Configurações", icon: Settings },
+  { label: "Relatórios", icon: BarChart3, page: null, disponivel: false },
+  { label: "Configurações", icon: Settings, page: null, disponivel: false },
 ];
 
 export function Sidebar({ isOpen, activePage, onNavigate, onClose, onLogout }: SidebarProps) {
@@ -50,11 +50,13 @@ export function Sidebar({ isOpen, activePage, onNavigate, onClose, onLogout }: S
       </div>
 
       <nav className="sidebar-nav" aria-label="Seções do dashboard">
-        {sidebarLinks.map(({ label, icon: Icon, page }) => (
+        {sidebarLinks.map(({ label, icon: Icon, page, disponivel = true }) => (
           <button
             className={page === activePage ? "sidebar-link active" : "sidebar-link"}
             key={label}
             type="button"
+            disabled={!disponivel}
+            title={disponivel ? undefined : "Em desenvolvimento"}
             onClick={() => {
               if (page) {
                 onNavigate(page);

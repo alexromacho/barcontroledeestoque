@@ -1,23 +1,62 @@
-import { ReactNode } from "react";
+import { FormEvent, ReactNode, useState } from "react";
 import { ClipboardCheck, FileImage, PackagePlus, ReceiptText, Truck } from "lucide-react";
 import { DashboardHeader } from "./DashboardHeader";
-import { Fornecedor, ProdutoEstoque } from "../types/estoque";
+import { Fornecedor, MovimentacaoEstoque, ProdutoEstoque } from "../types/estoque";
+import { normalizarTexto } from "../utils/normalizarTexto";
 
 type EntradasPageProps = {
   fornecedores: Fornecedor[];
   produtos: ProdutoEstoque[];
+  historicoMovimentacoes: MovimentacaoEstoque[];
   currentDateTime: string;
   onOpenMenu: () => void;
+  onRegistrarEntrada: (produtoId: string, quantidade: number) => void;
 };
 
 export function EntradasPage({
   fornecedores,
   produtos,
+  historicoMovimentacoes,
   currentDateTime,
   onOpenMenu,
+  onRegistrarEntrada,
 }: EntradasPageProps) {
-  const fornecedorPrincipal = fornecedores[0];
-  const produtosFornecedor = produtos.filter((produto) => produto.supplier === fornecedorPrincipal?.name);
+  const [fornecedorSelecionado, setFornecedorSelecionado] = useState(fornecedores[0]?.name ?? "");
+  const [buscaProduto, setBuscaProduto] = useState("");
+  const [produtoId, setProdutoId] = useState("");
+  const [quantidade, setQuantidade] = useState("1");
+
+  const fornecedorAtual = fornecedores.find((fornecedor) => fornecedor.name === fornecedorSelecionado) ?? fornecedores[0];
+  const produtosFornecedor = produtos.filter((produto) => produto.supplier === fornecedorAtual?.name);
+  const busca = normalizarTexto(buscaProduto);
+  const produtosFiltrados = busca
+    ? produtosFornecedor.filter((produto) => normalizarTexto(produto.name).includes(busca))
+    : produtosFornecedor;
+
+  const valorQuantidade = Number(quantidade);
+  const podeRegistrar = Boolean(produtoId) && Number.isFinite(valorQuantidade) && valorQuantidade > 0;
+
+  const hoje = new Date().toLocaleDateString("pt-BR");
+  const entradasHoje = historicoMovimentacoes.filter((movimentacao) => movimentacao.tipo === "entrada" && movimentacao.date === hoje);
+
+  function registrarEntrada(event: FormEvent) {
+    event.preventDefault();
+    if (!podeRegistrar) return;
+    onRegistrarEntrada(produtoId, valorQuantidade);
+    setProdutoId("");
+    setQuantidade("1");
+  }
+
+  function selecionarFornecedor(nome: string) {
+    setFornecedorSelecionado(nome);
+    setProdutoId("");
+    setBuscaProduto("");
+  }
+
+  function selecionarProdutoRapido(produto: ProdutoEstoque) {
+    setProdutoId(produto.id);
+    setQuantidade("1");
+  }
 
   return (
     <>
@@ -35,8 +74,13 @@ export function EntradasPage({
           <h2 id="entradas-resumo-title">Resumo do recebimento</h2>
         </div>
         <div className="teste-metrics dashboard-summary-grid" aria-label="Indicadores de entradas">
-          <EntradaMetricCard icon={<PackagePlus />} label="Entradas hoje" value="0" tone="good" />
-          <EntradaMetricCard icon={<ClipboardCheck />} label="Produtos recebidos" value="0" tone="neutral" />
+          <EntradaMetricCard icon={<PackagePlus />} label="Entradas hoje" value={entradasHoje.length.toString()} tone="good" />
+          <EntradaMetricCard
+            icon={<ClipboardCheck />}
+            label="Produtos recebidos"
+            value={new Set(entradasHoje.map((movimentacao) => movimentacao.productId)).size.toString()}
+            tone="neutral"
+          />
           <EntradaMetricCard icon={<Truck />} label="Fornecedores ativos" value={fornecedores.length.toString()} tone="good" />
           <EntradaMetricCard icon={<ReceiptText />} label="Notas pendentes" value="0" tone="warning" />
         </div>
@@ -52,10 +96,10 @@ export function EntradasPage({
             <PackagePlus size={24} />
           </div>
 
-          <form className="teste-form">
+          <form className="teste-form" onSubmit={registrarEntrada}>
             <label>
               Fornecedor
-              <select defaultValue={fornecedorPrincipal?.name ?? ""}>
+              <select value={fornecedorSelecionado} onChange={(event) => selecionarFornecedor(event.target.value)}>
                 {fornecedores.map((fornecedor) => (
                   <option key={fornecedor.name} value={fornecedor.name}>
                     {fornecedor.name}
@@ -66,14 +110,19 @@ export function EntradasPage({
 
             <label>
               Buscar produto
-              <input type="text" placeholder="Buscar produto recebido..." />
+              <input
+                type="text"
+                value={buscaProduto}
+                onChange={(event) => setBuscaProduto(event.target.value)}
+                placeholder="Buscar produto recebido..."
+              />
             </label>
 
             <label>
               Produto
-              <select defaultValue="">
+              <select value={produtoId} onChange={(event) => setProdutoId(event.target.value)}>
                 <option value="">Selecione o produto recebido</option>
-                {produtosFornecedor.slice(0, 12).map((produto) => (
+                {produtosFiltrados.slice(0, 12).map((produto) => (
                   <option key={produto.id} value={produto.id}>
                     {produto.name} · atual {produto.currentStock} · mínimo {produto.minimumStock}
                   </option>
@@ -84,7 +133,13 @@ export function EntradasPage({
             <div className="teste-form-row">
               <label>
                 Quantidade recebida
-                <input min="1" step="1" type="number" placeholder="0" />
+                <input
+                  min="1"
+                  step="1"
+                  type="number"
+                  value={quantidade}
+                  onChange={(event) => setQuantidade(event.target.value)}
+                />
               </label>
               <div className="teste-unit-card">
                 <span>Unidade</span>
@@ -97,7 +152,7 @@ export function EntradasPage({
               <input type="text" placeholder="Ex.: compra semanal, nota 1234" />
             </label>
 
-            <button type="button" disabled>
+            <button type="submit" disabled={!podeRegistrar}>
               Registrar entrada
             </button>
           </form>
@@ -113,8 +168,8 @@ export function EntradasPage({
           </div>
 
           <div className="entradas-supplier-card">
-            <strong>{fornecedorPrincipal?.name}</strong>
-            <span>{fornecedorPrincipal?.category}</span>
+            <strong>{fornecedorAtual?.name}</strong>
+            <span>{fornecedorAtual?.category}</span>
           </div>
 
           <div className="produtos-fornecedor-scroll">
@@ -128,7 +183,7 @@ export function EntradasPage({
                     </span>
                     <em className="is-ok">Receber</em>
                   </div>
-                  <button type="button" disabled>
+                  <button type="button" onClick={() => selecionarProdutoRapido(produto)}>
                     Adicionar entrada
                   </button>
                 </div>
@@ -173,13 +228,27 @@ export function EntradasPage({
                 <th>Unidade</th>
                 <th>Estoque anterior</th>
                 <th>Estoque atual</th>
-                <th>Observação</th>
               </tr>
             </thead>
             <tbody>
-              <tr>
-                <td colSpan={9}>Nenhuma entrada registrada hoje.</td>
-              </tr>
+              {entradasHoje.length === 0 ? (
+                <tr>
+                  <td colSpan={8}>Nenhuma entrada registrada hoje.</td>
+                </tr>
+              ) : (
+                entradasHoje.map((movimentacao) => (
+                  <tr key={movimentacao.id}>
+                    <td>{movimentacao.date}</td>
+                    <td>{movimentacao.time}</td>
+                    <td>{movimentacao.productName}</td>
+                    <td>{movimentacao.supplier}</td>
+                    <td>{movimentacao.quantity}</td>
+                    <td>{movimentacao.unit}</td>
+                    <td>{movimentacao.previousStock}</td>
+                    <td>{movimentacao.currentStock}</td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>

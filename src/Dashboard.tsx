@@ -351,7 +351,7 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
     }
   }
 
-  function registerInvoiceEntry(produtoId: string, quantidade: number) {
+  function registerStockEntry(produtoId: string, quantidade: number) {
     const { produto, produtoAtualizado, produtosAtualizados, movimentacao } = registrarEntradaEstoque(produtos, produtoId, quantidade);
     setProdutos(produtosAtualizados);
     setHistoricoMovimentacoes((atuais) => [movimentacao, ...atuais]);
@@ -360,7 +360,7 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
       proximos.delete(produtoId);
       return proximos;
     });
-    setMessage(`${produto.name}: entrada de ${quantidade} ${produto.unit} registrada pela nota fiscal.`);
+    setMessage(`${produto.name}: entrada de ${quantidade} ${produto.unit} registrada.`);
     produtoRepository.atualizar(produtoAtualizado).catch((error) =>
       setMessage(error instanceof Error ? error.message : "Não foi possível salvar a entrada de estoque."),
     );
@@ -501,7 +501,7 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
                 />
               </section>
 
-              <EstoqueProdutos produtos={produtos} onRegistrarEntrada={registerInvoiceEntry} />
+              <EstoqueProdutos produtos={produtos} onRegistrarEntrada={registerStockEntry} />
               <section className="teste-panel teste-future-panel" aria-labelledby="future-image-title">
                 <div className="teste-panel-heading">
                   <div>
@@ -524,8 +524,10 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
             <EntradasPage
               fornecedores={fornecedores}
               produtos={produtos}
+              historicoMovimentacoes={historicoMovimentacoes}
               currentDateTime={currentDateTime}
               onOpenMenu={() => setSidebarOpen(true)}
+              onRegistrarEntrada={registerStockEntry}
             />
           ) : (
             <FornecedoresPage
