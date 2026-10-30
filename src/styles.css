@@ -1077,6 +1077,45 @@ a {
   box-shadow: 0 10px 24px rgba(0, 107, 60, 0.2);
 }
 
+.sidebar-link:disabled {
+  color: var(--bar-muted);
+  opacity: .5;
+  cursor: not-allowed;
+}
+
+.estoque-fornecedor-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.estoque-tab {
+  min-height: 36px;
+  padding: 0 14px;
+  border-radius: 999px;
+  background: var(--bar-background);
+  color: var(--bar-text);
+  border: 1px solid var(--bar-border);
+  font-weight: 700;
+}
+
+.estoque-tab.active {
+  color: #fff;
+  background: var(--bar-green);
+  border-color: var(--bar-green);
+}
+
+.estoque-fornecedor-grupo {
+  margin-bottom: 20px;
+}
+
+.estoque-fornecedor-grupo h3 {
+  margin: 0 0 8px;
+  font-size: .95rem;
+  color: var(--bar-muted);
+}
+
 .sidebar-close,
 .sidebar-backdrop,
 .mobile-menu-button {

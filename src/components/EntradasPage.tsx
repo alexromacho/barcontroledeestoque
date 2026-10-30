@@ -25,6 +25,8 @@ export function EntradasPage({
   const [buscaProduto, setBuscaProduto] = useState("");
   const [produtoId, setProdutoId] = useState("");
   const [quantidade, setQuantidade] = useState("1");
+  const [produtoRapidoId, setProdutoRapidoId] = useState<string | null>(null);
+  const [quantidadeRapida, setQuantidadeRapida] = useState("1");
 
   const fornecedorAtual = fornecedores.find((fornecedor) => fornecedor.name === fornecedorSelecionado) ?? fornecedores[0];
   const produtosFornecedor = produtos.filter((produto) => produto.supplier === fornecedorAtual?.name);
@@ -53,9 +55,21 @@ export function EntradasPage({
     setBuscaProduto("");
   }
 
-  function selecionarProdutoRapido(produto: ProdutoEstoque) {
-    setProdutoId(produto.id);
-    setQuantidade("1");
+  function abrirEntradaRapida(produto: ProdutoEstoque) {
+    setProdutoRapidoId(produto.id);
+    setQuantidadeRapida("1");
+  }
+
+  function fecharEntradaRapida() {
+    setProdutoRapidoId(null);
+    setQuantidadeRapida("1");
+  }
+
+  function confirmarEntradaRapida(produto: ProdutoEstoque) {
+    const valor = Number(quantidadeRapida);
+    if (!Number.isFinite(valor) || valor <= 0) return;
+    onRegistrarEntrada(produto.id, valor);
+    fecharEntradaRapida();
   }
 
   return (
@@ -117,6 +131,24 @@ export function EntradasPage({
                 placeholder="Buscar produto recebido..."
               />
             </label>
+
+            <div className="teste-search-results" aria-label="Produtos filtrados">
+              {produtosFiltrados.length === 0 ? (
+                <p className="teste-empty">Nenhum produto encontrado.</p>
+              ) : (
+                produtosFiltrados.slice(0, 8).map((produto) => (
+                  <button
+                    className={produto.id === produtoId ? "teste-search-result is-selected" : "teste-search-result"}
+                    key={produto.id}
+                    type="button"
+                    onClick={() => setProdutoId(produto.id)}
+                  >
+                    <span>{produto.name}</span>
+                    <small>Atual {produto.currentStock} · mínimo {produto.minimumStock}</small>
+                  </button>
+                ))
+              )}
+            </div>
 
             <label>
               Produto
@@ -183,10 +215,39 @@ export function EntradasPage({
                     </span>
                     <em className="is-ok">Receber</em>
                   </div>
-                  <button type="button" onClick={() => selecionarProdutoRapido(produto)}>
-                    Adicionar entrada
-                  </button>
+                  {produtoRapidoId !== produto.id && (
+                    <button type="button" onClick={() => abrirEntradaRapida(produto)}>
+                      Adicionar entrada
+                    </button>
+                  )}
                 </div>
+                {produtoRapidoId === produto.id && (
+                  <div className="teste-manual-add">
+                    <label>
+                      Quantidade
+                      <input
+                        min="1"
+                        step="1"
+                        type="number"
+                        value={quantidadeRapida}
+                        onChange={(event) => setQuantidadeRapida(event.target.value)}
+                        autoFocus
+                      />
+                    </label>
+                    <span>{produto.unit}</span>
+                    <button type="button" onClick={() => confirmarEntradaRapida(produto)}>
+                      Registrar
+                    </button>
+                    <button
+                      className="teste-manual-cancel"
+                      type="button"
+                      onClick={fecharEntradaRapida}
+                      aria-label={`Cancelar entrada de ${produto.name}`}
+                    >
+                      Cancelar
+                    </button>
+                  </div>
+                )}
               </div>
             ))}
           </div>

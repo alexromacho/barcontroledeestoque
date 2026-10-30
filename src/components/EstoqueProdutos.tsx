@@ -1,17 +1,68 @@
 import { ChangeEvent, FormEvent, useEffect, useState } from "react";
 import { Camera, PackagePlus, Truck } from "lucide-react";
-import { ProdutoEstoque } from "../types/estoque";
+import { Fornecedor, ProdutoEstoque } from "../types/estoque";
 
 type EstoqueProdutosProps = {
   produtos: ProdutoEstoque[];
+  fornecedores: Fornecedor[];
   onRegistrarEntrada: (produtoId: string, quantidade: number) => void;
 };
 
-export function EstoqueProdutos({ produtos, onRegistrarEntrada }: EstoqueProdutosProps) {
+function tabelaProdutos(produtos: ProdutoEstoque[]) {
+  return (
+    <table className="teste-table">
+      <thead>
+        <tr>
+          <th>Produto</th>
+          <th>Categoria</th>
+          <th>Unidade</th>
+          <th>Atual</th>
+          <th>Mínimo</th>
+          <th>Valor unitário</th>
+          <th>Valor em estoque</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        {produtos.map((product) => {
+          const quantityToBuy = Math.max(0, product.minimumStock - product.currentStock);
+          return (
+            <tr key={product.id}>
+              <td>{product.name}</td>
+              <td>{product.category}</td>
+              <td>{product.unit}</td>
+              <td>{product.currentStock}</td>
+              <td>{product.minimumStock}</td>
+              <td>{(product.unitPrice ?? 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}</td>
+              <td>{((product.unitPrice ?? 0) * product.currentStock).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}</td>
+              <td>
+                {quantityToBuy > 0 ? (
+                  <span className="teste-status buy">Comprar {quantityToBuy} {product.unit}</span>
+                ) : (
+                  <span className="teste-status ok">OK</span>
+                )}
+              </td>
+            </tr>
+          );
+        })}
+      </tbody>
+    </table>
+  );
+}
+
+export function EstoqueProdutos({ produtos, fornecedores, onRegistrarEntrada }: EstoqueProdutosProps) {
   const [fotoNota, setFotoNota] = useState<File | null>(null);
   const [fotoUrl, setFotoUrl] = useState("");
   const [produtoId, setProdutoId] = useState("");
   const [quantidade, setQuantidade] = useState("1");
+  const [abaSelecionada, setAbaSelecionada] = useState("todos");
+
+  const fornecedoresComItens = fornecedores.filter((fornecedor) =>
+    produtos.some((produto) => produto.supplier === fornecedor.name),
+  );
+  const gruposExibidos = abaSelecionada === "todos"
+    ? fornecedoresComItens
+    : fornecedoresComItens.filter((fornecedor) => fornecedor.name === abaSelecionada);
 
   useEffect(() => () => {
     if (fotoUrl) URL.revokeObjectURL(fotoUrl);
@@ -47,47 +98,38 @@ export function EstoqueProdutos({ produtos, onRegistrarEntrada }: EstoqueProduto
         <Truck size={24} />
       </div>
 
-      <div className="teste-table-wrap">
-        <table className="teste-table">
-          <thead>
-            <tr>
-              <th>Produto</th>
-              <th>Categoria</th>
-              <th>Fornecedor</th>
-              <th>Unidade</th>
-              <th>Atual</th>
-              <th>Mínimo</th>
-              <th>Valor unitário</th>
-              <th>Valor em estoque</th>
-              <th>Status</th>
-            </tr>
-          </thead>
-          <tbody>
-            {produtos.map((product) => {
-              const quantityToBuy = Math.max(0, product.minimumStock - product.currentStock);
-              return (
-                <tr key={product.id}>
-                  <td>{product.name}</td>
-                  <td>{product.category}</td>
-                  <td>{product.supplier}</td>
-                  <td>{product.unit}</td>
-                  <td>{product.currentStock}</td>
-                  <td>{product.minimumStock}</td>
-                  <td>{(product.unitPrice ?? 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}</td>
-                  <td>{((product.unitPrice ?? 0) * product.currentStock).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}</td>
-                  <td>
-                    {quantityToBuy > 0 ? (
-                      <span className="teste-status buy">Comprar {quantityToBuy} {product.unit}</span>
-                    ) : (
-                      <span className="teste-status ok">OK</span>
-                    )}
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
+      <div className="estoque-fornecedor-tabs" role="tablist" aria-label="Filtrar estoque por fornecedor">
+        <button
+          type="button"
+          role="tab"
+          aria-selected={abaSelecionada === "todos"}
+          className={abaSelecionada === "todos" ? "estoque-tab active" : "estoque-tab"}
+          onClick={() => setAbaSelecionada("todos")}
+        >
+          Todos
+        </button>
+        {fornecedoresComItens.map((fornecedor) => (
+          <button
+            key={fornecedor.name}
+            type="button"
+            role="tab"
+            aria-selected={abaSelecionada === fornecedor.name}
+            className={abaSelecionada === fornecedor.name ? "estoque-tab active" : "estoque-tab"}
+            onClick={() => setAbaSelecionada(fornecedor.name)}
+          >
+            {fornecedor.name}
+          </button>
+        ))}
       </div>
+
+      {gruposExibidos.map((fornecedor) => (
+        <div className="estoque-fornecedor-grupo" key={fornecedor.name}>
+          <h3>{fornecedor.name}</h3>
+          <div className="teste-table-wrap">
+            {tabelaProdutos(produtos.filter((produto) => produto.supplier === fornecedor.name))}
+          </div>
+        </div>
+      ))}
 
       <section className="nota-fiscal-entrada" aria-labelledby="nota-fiscal-title">
         <div className="teste-panel-heading">

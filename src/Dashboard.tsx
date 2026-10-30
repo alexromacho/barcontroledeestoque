@@ -501,7 +501,7 @@ function Dashboard({ onLogout }: { onLogout: () => void }) {
                 />
               </section>
 
-              <EstoqueProdutos produtos={produtos} onRegistrarEntrada={registerStockEntry} />
+              <EstoqueProdutos produtos={produtos} fornecedores={fornecedores} onRegistrarEntrada={registerStockEntry} />
               <section className="teste-panel teste-future-panel" aria-labelledby="future-image-title">
                 <div className="teste-panel-heading">
                   <div>
